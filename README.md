@@ -104,8 +104,8 @@ Then just start describing a system you want to design — "help me architect…
 ## The format
 
 The specs Specifold produces conform to the **Specifold Format** — an open,
-versioned, agent-native specification format. The current version is **v0.1**, the
-architecture layer. The normative definition — fields, body contract, integrity
+versioned, agent-native specification format. The current version is **v0.2** —
+the architecture layer plus a feature layer. The normative definition — fields, body contract, integrity
 rules, and a Pydantic reference schema — is in [`SPEC.md`](./SPEC.md), and it's
 published in the open at [mfm.dev/specifold](https://mfm.dev/specifold).
 

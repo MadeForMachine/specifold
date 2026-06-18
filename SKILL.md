@@ -105,17 +105,17 @@ way, which is the most valuable thing in the whole spec. Push for the reasoning,
 not just the label.
 
 Store one file per component, in a directory tree that mirrors the parent/child
-structure. The output conforms to the **Specifold Format v0.1** — the normative
-field set, body contract, and integrity rules are in `SPEC.md`.
+structure. The output is the architecture layer of the **Specifold Format v0.2** — the
+normative field set, body contract, and integrity rules are in `SPEC.md`.
 
 At the spec root, also write a `specifold.yaml` manifest that declares the format
 version and the root component, so the spec is self-identifying:
 
 ```yaml
-spec_format: "0.1"
+spec_format: "0.2"
 name: "<the system's name>"
 root: <id of the root component>   # the one component whose parent is null
-created: <today, ISO date>
+created: "<today, ISO date>"
 ```
 
 ## How a session goes
