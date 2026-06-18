@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://madeformachine.com/specifold/0.2/node.schema.json",
+  "title": "Specifold node frontmatter (v0.2)",
+  "description": "The YAML frontmatter of a single Specifold node file. A node is a component (architecture layer) or a feature (feature layer). Shape only: cross-spec integrity is enforced by the named lint rules, not by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "kind", "parent"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "title": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["component", "feature"] },
+    "parent": { "type": ["string", "null"], "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "tier": { "enum": ["core", "experimental"] },
+    "status": { "enum": ["draft", "open", "decided"] },
+    "open_questions": { "type": "array", "items": { "type": "string" } },
+    "responsibility": { "type": "string", "minLength": 1 },
+    "depends_on": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+    "intent": { "type": "string", "minLength": 1 },
+    "touches": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["component", "needs"],
+        "properties": {
+          "component": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "needs": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "component" } }, "required": ["kind"] },
+      "then": {
+        "required": ["responsibility"],
+        "properties": { "intent": false, "touches": false }
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "feature" } }, "required": ["kind"] },
+      "then": {
+        "required": ["intent", "touches"],
+        "properties": { "responsibility": false, "depends_on": false }
+      }
+    }
+  ],
+  "$defs": {
+    "edge": {
+      "description": "A dependency edge. Either a bare component id (v0.1 form) or a typed edge.",
+      "oneOf": [
+        { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["to"],
+          "properties": {
+            "to": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+            "kind": { "enum": ["consumes", "emits", "uses", "configured-by"] },
+            "what": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}
