@@ -69,6 +69,7 @@ The same content cannot serve both audiences well, so split it deliberately.
 ---
 id: routing-engine          # stable, lowercase, hyphenated
 title: Routing engine
+kind: component             # every node declares its kind
 parent: api-service         # id of the parent component, or null at the root
 responsibility: Decide where each inbound item is delivered.   # exactly one sentence
 tier: core                  # core | experimental
@@ -108,8 +109,10 @@ Store one file per component, in a directory tree that mirrors the parent/child
 structure. The output is the architecture layer of the **Specifold Format v0.2** — the
 normative field set, body contract, and integrity rules are in `SPEC.md`.
 
-At the spec root, also write a `specifold.yaml` manifest that declares the format
-version and the root component, so the spec is self-identifying:
+A spec has **exactly one** `specifold.yaml` root manifest, at its top level. Write
+it **only when starting a new spec**; if you are extending an existing spec it
+already has one — never add a second. It declares the format version and names the
+single root component, so the spec is self-identifying:
 
 ```yaml
 spec_format: "0.2"
@@ -117,6 +120,24 @@ name: "<the system's name>"
 root: <id of the root component>   # the one component whose parent is null
 created: "<today, ISO date>"
 ```
+
+## First: new spec, or extending an existing one?
+
+Before anything else, find out whether a Specifold spec already exists for this
+codebase. Look for a `specifold.yaml`, or any node whose `parent` is `null`.
+
+- **If one exists, you are *extending* it.** Your new work attaches *under an
+  existing component* — you are adding sub-components, not founding a parallel
+  spec. Read the existing manifest and the component map first, decide which
+  existing component is the right parent, and set your new sub-tree's root
+  `parent:` to it. Do **not** write a second `specifold.yaml`, and do **not**
+  introduce a second `parent: null` node. A spec has exactly one root.
+- **If none exists, you are *creating* a new spec.** Proceed below; you will write
+  the one root component (`parent: null`) and the one `specifold.yaml` manifest.
+
+Getting this wrong is the most damaging mistake at this layer: a second root
+silently forks the tree into two disconnected specs. The consistency check below
+catches it — but recognize it here first.
 
 ## How a session goes
 
@@ -211,16 +232,27 @@ only in the conversation. The files are the memory; the chat is disposable.
 
 ## Consistency rules — check before every commit
 
-The tree rots silently if links break, so validate before you commit:
+The tree rots silently if links break, so validate before you commit. The
+authoritative rules are the integrity rules in `SPEC.md`; run the reference linter
+over the spec and make it pass with no errors:
 
-- every id in a `depends_on` list refers to a component that actually exists,
-- every component except the root has a `parent` that exists,
-- no two components claim the same responsibility (if they do, they are probably
-  one component),
-- after a delete or unlink, no edge points at the removed component and no
-  component is left orphaned.
+    python3 specifold_lint.py <spec-dir>
 
-If a check fails, fix it before committing — never leave a broken tree behind.
+The errors it will not let through — the load-bearing ones at this layer:
+
+- **exactly one root** — one component has `parent: null`, and the manifest's
+  `root` names it (`spec/single-root`); and **exactly one** `specifold.yaml`
+  (`spec/declared-format`),
+- every `parent` and every `depends_on` target resolves, and both graphs are
+  acyclic,
+- every `responsibility` is one sentence.
+
+And the warnings worth heeding: two components sharing a responsibility (they are
+probably one), and a `decided` node still carrying `open_questions` (it is `open`,
+not `decided`).
+
+If the linter reports an error, fix it before committing — never leave a broken
+tree behind.
 
 ## Version control
 
