@@ -5,7 +5,7 @@ parent: relayve
 responsibility: Manage private Ghosty sessions and create authored relays only when a session produces a finished thought.
 tier: core
 status: open
-depends_on: [identity, relay-graph, agent-runtime, tool-layer]
+depends_on: [identity, relay-graph, agent-runtime]
 open_questions:
   - How much session history should be retained after the authored relay is deleted?
 ---
@@ -21,8 +21,9 @@ graph. Studio also receives Scoop handoffs when discovery turns into authoring.
 
 Provides: private Ghosty session lifecycle, session list state, Scoop handoff
 acceptance, and relay creation only after a session produces a finished thought.
-Consumes: authenticated user identity, relay graph write operations through
-Ghosty, and tool-layer handoff calls from Scoop.
+Consumes: authenticated user identity, and relay graph write operations through
+Ghosty. (Scoop→Studio handoffs arrive as calls the tool-layer makes *into* Studio,
+so the dependency runs tool-layer → Studio — being invoked is not a dependency.)
 
 ## Essential vs accidental
 
