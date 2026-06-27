@@ -9,6 +9,7 @@ major bump.
   and typed absence (`mined-absent` vs `dark`).
 - Renamed from `mfm-catalog` to `atlas` — Atlas is the engine's name, and the `mfm-` prefix
   is redundant inside the mfm namespace.
-- Depends on the Atlas MCP tools (`mfm_capabilities`, `mfm_select`, `mfm_compare`,
-  `mfm_provider`, `mfm_tree`). **These tool names are not yet final** — they must be
-  reconciled with the served MCP surface before this ships.
+- Depends on the Atlas MCP tools (`atlas_capabilities`, `atlas_select`, `atlas_compare`,
+  `atlas_provider`, `atlas_tree`) — now reconciled with the served MCP surface: these are the
+  real read tools registered in `mcp/atlas_tools.py`, pass-throughs to the public `/v1/atlas`
+  plane.

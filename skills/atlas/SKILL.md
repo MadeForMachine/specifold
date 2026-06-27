@@ -5,7 +5,7 @@ version: 0.1.0
 status: beta
 public: true
 connector: mfm
-requires: [mfm_capabilities, mfm_select, mfm_compare, mfm_provider, mfm_tree]
+requires: [atlas_capabilities, atlas_select, atlas_compare, atlas_provider, atlas_tree]
 license: MIT
 ---
 
@@ -45,30 +45,30 @@ Three things make this work, and you must respect all three:
 Each tool takes a tight query and returns a precomputed answer. Pass the narrowest input you
 can; the power is in the precompute, not in options.
 
-1. `mfm_capabilities` — the controlled vocabulary: canonical capability terms and how many
+1. `atlas_capabilities` — the controlled vocabulary: canonical capability terms and how many
    providers ground each. Learn valid terms here *before* querying the field.
-2. `mfm_select` — query the whole field by **required** and **excluded** capabilities.
+2. `atlas_select` — query the whole field by **required** and **excluded** capabilities.
    Returns matches **and** the transparent elimination: who was cut and on which missing
    requirement, each absence typed `mined-absent` vs `dark`. The elimination is evidence,
    not noise.
-3. `mfm_compare` — pivot a shortlist (2–4 providers) against one topic into a
+3. `atlas_compare` — pivot a shortlist (2–4 providers) against one topic into a
    capability-by-provider matrix. It also returns the **reading list**: the exact evidence
    URLs to read to judge the topic across the shortlist. Read those, not the doc sites.
-4. `mfm_provider` — one provider's grounded capabilities, each with its evidence URL and the
+4. `atlas_provider` — one provider's grounded capabilities, each with its evidence URL and the
    coverage provenance (how thoroughly researched, which areas are dark).
-5. `mfm_tree` — the provider's **pinned** doc tree: depth-collapsed, each node flagged with
-   the capabilities grounded on it. Use it to find the one node to read when a `mfm_compare`
+5. `atlas_tree` — the provider's **pinned** doc tree: depth-collapsed, each node flagged with
+   the capabilities grounded on it. Use it to find the one node to read when a `atlas_compare`
    cell is dark or you need detail below a capability.
 
 ## Workflow
 
 1. Restate the requirement as **hard constraints** (must-haves) vs **soft preferences**.
-2. If unsure of valid terms, call `mfm_capabilities` first — query the vocabulary, not free
+2. If unsure of valid terms, call `atlas_capabilities` first — query the vocabulary, not free
    text.
-3. `mfm_select` with the hard constraints. Read the elimination: a provider cut on a
+3. `atlas_select` with the hard constraints. Read the elimination: a provider cut on a
    `mined-absent` requirement is genuinely out; one cut on a `dark` area is *unknown*, not
    out — flag it.
-4. Take the top 2–4 to `mfm_compare` on the deciding topic. Follow the **reading list** to
+4. Take the top 2–4 to `atlas_compare` on the deciding topic. Follow the **reading list** to
    the evidence URLs; read those nodes, nothing more.
 5. Recommend one and say why — cite the capability terms, the evidence URLs, and the
    coverage. Name the runner-up and the exact axis it lost on. If a `dark` area could change
