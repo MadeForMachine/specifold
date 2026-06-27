@@ -23,8 +23,8 @@ UNDERSTOOD_FORMATS = {"0.1", "0.2"}  # v0.1 specs remain valid under a v0.2 tool
 
 
 class Node:
-    def __init__(self, path: Path, fm: dict, body: str):
-        self.path = path
+    def __init__(self, fm: dict, body: str, source: str | None = None):
+        self.source = source  # a path or label for diagnostics; not read by any rule
         self.fm = fm
         self.body = body
         self.id = fm.get("id")
@@ -57,6 +57,26 @@ def _split_frontmatter(text: str) -> tuple[dict, str]:
     return (fm if isinstance(fm, dict) else {}), parts[2]
 
 
+def parse_node(text: str, source: str | None = None) -> "Node | None":
+    """Build a Node from one node file's text, or None if it isn't a spec node.
+
+    A spec node is any markdown with frontmatter carrying an `id`; anything else
+    (plain prose, the format's own docs) returns None. v0.1 nodes have no `kind`, so
+    it defaults to `component` (only components existed then). This is the in-memory
+    entry the hosted store uses — it never touches the filesystem."""
+    fm, body = _split_frontmatter(text)
+    if not fm or "id" not in fm:
+        return None
+    fm.setdefault("kind", "component")
+    return Node(fm, body, source)
+
+
+def parse_manifest(text: str) -> dict:
+    """Parse a specifold.yaml manifest into a dict (empty dict if blank/non-mapping)."""
+    data = yaml.safe_load(text) or {}
+    return data if isinstance(data, dict) else {}
+
+
 def _edge_target(e) -> str | None:
     if isinstance(e, str):
         return e
@@ -81,6 +101,22 @@ class Report:
     def rule(self, rule_id: str, sev: str, failures: list[str]):
         self.results.append((rule_id, sev, failures))
 
+    def has_errors(self) -> bool:
+        """True if any error-level rule failed — the gate a hosted write checks."""
+        return any(sev == "error" and failures for _, sev, failures in self.results)
+
+    def summary(self) -> dict:
+        """Structured view for programmatic callers (the service): failing rules
+        grouped by severity. An empty `errors` list means the write may be admitted."""
+        return {
+            "errors": [
+                {"rule": r, "failures": f} for r, sev, f in self.results if sev == "error" and f
+            ],
+            "warnings": [
+                {"rule": r, "failures": f} for r, sev, f in self.results if sev == "warn" and f
+            ],
+        }
+
     def render_and_exit(self):
         errors = warns = 0
         width = max((len(r) for r, _, _ in self.results), default=0)
@@ -102,39 +138,53 @@ class Report:
 
 
 def load_spec(spec_dir: Path):
+    """Filesystem adapter: read a spec directory into (manifest paths, nodes).
+
+    The only filesystem-aware part of the linter; the rules themselves run over the
+    in-memory nodes via `lint_nodes`."""
     manifests = sorted(spec_dir.rglob("specifold.yaml"))
     nodes: list[Node] = []
-    malformed: list[str] = []
     for md in sorted(spec_dir.rglob("*.md")):
         if md.name.upper() in {"README.MD", "SPEC.MD", "SKILL.MD", "GLOSSARY.MD"}:
             continue
-        fm, body = _split_frontmatter(md.read_text(encoding="utf-8"))
-        if not fm or "id" not in fm:
-            continue  # not a spec node (plain markdown)
-        fm.setdefault("kind", "component")  # v0.1 nodes have no kind; only components existed
-        nodes.append(Node(md, fm, body))
+        node = parse_node(md.read_text(encoding="utf-8"), source=str(md))
+        if node is not None:
+            nodes.append(node)
     return manifests, nodes
 
 
 def lint(spec_dir: Path) -> Report:
+    """Filesystem entry (the CLI path): load a spec dir, then lint it in memory."""
     manifests, nodes = load_spec(spec_dir)
-    rep = Report()
     rel = lambda p: str(p.relative_to(spec_dir))  # noqa: E731
-
-    # spec/declared-format — exactly one manifest, exists, format understood
-    fmt_failures = []
+    manifest_problems: list[str] = []
     manifest = None
     if not manifests:
-        fmt_failures.append("no specifold.yaml found in the spec")
+        manifest_problems.append("no specifold.yaml found in the spec")
     elif len(manifests) > 1:
-        fmt_failures.append(
+        manifest_problems.append(
             "more than one specifold.yaml (a spec has exactly one root manifest): "
             + ", ".join(rel(m) for m in manifests)
         )
     else:
-        manifest = yaml.safe_load(manifests[0].read_text(encoding="utf-8")) or {}
-        if manifest.get("spec_format") not in UNDERSTOOD_FORMATS:
-            fmt_failures.append(f"spec_format {manifest.get('spec_format')!r} not understood")
+        manifest = parse_manifest(manifests[0].read_text(encoding="utf-8"))
+    return lint_nodes(nodes, manifest, manifest_problems=manifest_problems)
+
+
+def lint_nodes(nodes, manifest, *, manifest_problems=()) -> Report:
+    """Lint an in-memory spec: the node list plus the single manifest dict (or None).
+
+    The pure rule engine — no filesystem, no model — shared by the CLI and the hosted
+    store, so a consistency rule is enforced identically wherever a spec is drafted.
+    `manifest_problems` carries manifest-cardinality failures the in-memory caller can't
+    see for itself: the service holds exactly one manifest and passes none, while the
+    filesystem loader passes 'no manifest' / 'more than one' here."""
+    rep = Report()
+
+    # spec/declared-format — manifest present, singular, and format understood
+    fmt_failures = list(manifest_problems)
+    if manifest is not None and manifest.get("spec_format") not in UNDERSTOOD_FORMATS:
+        fmt_failures.append(f"spec_format {manifest.get('spec_format')!r} not understood")
     rep.rule("spec/declared-format", "error", fmt_failures)
 
     components = [n for n in nodes if n.kind == "component"]
