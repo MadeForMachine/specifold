@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mfm.dev/schemas/skill.schema.json",
+  "title": "MFM skill manifest",
+  "description": "The frontmatter contract for a SKILL.md in this repo. Every public surface (the madeformachine.com page, the mfm.dev machine page and JSON twin, the install bundle, the API links) is generated from these fields plus the SKILL.md body and the sibling CHANGELOG.md. The repo is the single source of truth.",
+  "type": "object",
+  "required": ["name", "description", "version", "status", "public", "license"],
+  "additionalProperties": true,
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "The skill's install folder name and id, e.g. 'mfm-catalog'."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Trigger description — when an agent should reach for this skill."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the skill itself. Surfaced as latest_version on the machine page so an installed copy can self-check."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["alpha", "beta", "mvp", "stable"],
+      "description": "Maturity, shown as the badge on the skill page."
+    },
+    "public": {
+      "type": "boolean",
+      "description": "Whether this skill is published to the public site and serve endpoints. Internal/operator skills (e.g. atlas-harvest) live in a private repo and are never marked true here."
+    },
+    "connector": {
+      "type": ["string", "null"],
+      "description": "The MCP server the skill rides on (e.g. 'mfm'), or null if it needs none. The skill is the opinion; the connector provides the instruments."
+    },
+    "requires": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "MCP tool ids the SKILL.md body calls. The generated page links each to its API reference (itself generated from the live MCP schema, so the names cannot drift)."
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX license id, e.g. 'MIT'."
+    }
+  }
+}

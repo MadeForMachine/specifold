@@ -12,6 +12,12 @@ description: >-
   partner — even if they never say the word "specification." Operates at the
   architecture (component-tree) level only: it deliberately does not break things
   into detailed features, choose technologies, or generate code.
+version: 0.2.0
+status: mvp
+public: true
+connector: null
+requires: []
+license: MIT
 ---
 
 # Specifold
