@@ -32,7 +32,7 @@ twin — so the pages can't drift from the skill.
 | Skill | What it does | Status |
 |-------|--------------|--------|
 | [`specifold`](skills/specifold/) | Interrogates a system's architecture out of your head into a spec. | mvp |
-| [`mfm-catalog`](skills/mfm-catalog/) | Steers your agent to traverse the MFM catalog — jump to doc evidence instead of crawling provider docs. | beta |
+| [`atlas`](skills/atlas/) | Steers your agent to traverse MadeForMachine Atlas (the service catalog) — jump to doc evidence instead of crawling provider docs. | beta |
 
 Internal / operator-scoped skills (e.g. the Atlas harvest tooling) are **not** in
 this repo — they live in a private repo and are never published.

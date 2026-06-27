@@ -10,7 +10,7 @@
     "name": {
       "type": "string",
       "pattern": "^[a-z0-9-]+$",
-      "description": "The skill's install folder name and id, e.g. 'mfm-catalog'."
+      "description": "The skill's install folder name and id, e.g. 'atlas'."
     },
     "description": {
       "type": "string",
