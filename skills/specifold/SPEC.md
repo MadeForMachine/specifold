@@ -1,7 +1,7 @@
 # Specifold Format
 
-**Version:** 0.2
-**Status:** draft — the architecture layer and the feature layer
+**Version:** 0.3
+**Status:** draft — architecture, features, and evaluation notes
 **Part of:** [MadeForMachine](https://madeformachine.com)
 
 The Specifold Format is an agent-native specification format: a way to describe a
@@ -14,10 +14,10 @@ This document is normative. It is the contract that a Specifold spec conforms to
 The executable counterpart is the [reference schema](#reference-schema) at the end;
 where prose and schema disagree, the schema wins.
 
-## Scope of v0.2 — architecture and features
+## Scope of v0.3 — architecture, features, and evaluations
 
-A Specifold spec describes a software system as a graph of **nodes**. v0.2 defines
-two kinds of node:
+A Specifold spec describes a software system as a graph of **nodes**. v0.3 defines
+two durable design node kinds and one lightweight feedback node:
 
 - **components** — the architecture layer (unchanged from v0.1): a tree of
   components, their single responsibilities, the dependencies between them, and the
@@ -25,6 +25,9 @@ two kinds of node:
 - **features** — the feature layer (new in v0.2): what the system observably does,
   each feature a path across the components it needs, with the behavior and
   acceptance that hold regardless of how the system is built.
+- **evaluations** — documented human or customer feedback about a revision,
+  feature, component, variant, or artifact. Evaluations record verdicts and lessons;
+  they do not mutate intent by themselves.
 
 The two layers are **peers, not a hierarchy.** Features are not derived from
 architecture, nor architecture from features; they constrain each other and
@@ -32,7 +35,7 @@ co-evolve. A feature is a path *across* the component tree — it cannot be a pr
 of any one component — which is precisely why it is its own kind of node, linked to
 components rather than nested under one.
 
-v0.2 deliberately does **not** describe:
+v0.3 deliberately does **not** describe:
 
 - technologies, frameworks, or libraries,
 - UI/UX layouts or flows,
@@ -44,9 +47,10 @@ Keeping the spec narrow is what keeps it small, portable across technology choic
 and cheap to throw a new idea at. The version number is a promise that the format
 grows downward over time — not that it is finished.
 
-**v0.1 specs remain valid.** v0.2 is additive: a spec containing only components is
-a valid v0.2 spec, and the architecture-layer rules are unchanged. A spec declares
-the version it was written against; tools support the versions they understand.
+**Earlier specs remain valid.** v0.3 is additive: a v0.1 component-only spec and a
+v0.2 component+feature spec remain valid, and the architecture-layer rules are
+unchanged. A spec declares the version it was written against; tools support the
+versions they understand.
 
 ## A spec is a directory
 
@@ -60,6 +64,8 @@ my-system/
     <child-component>.md
   features/               # feature files live here
     <feature>.md
+  evaluations/            # feedback/evaluation notes live here
+    <evaluation>.md
 ```
 
 - **One file per node.** Each node is a single Markdown file with YAML frontmatter
@@ -71,6 +77,9 @@ my-system/
 - **Features live under `features/`.** A feature crosses the component tree, so it
   does not nest within it. Features may be grouped (an epic and its features) via the
   `parent` field, but their directory placement is not load-bearing.
+- **Evaluations live under `evaluations/`.** They are feedback records, not part of
+  the component tree and not feature epics. Their `subject` field carries what they
+  evaluate.
 
 ### Root manifest — `specifold.yaml`
 
@@ -79,7 +88,7 @@ self-identifying: a tool can read one file and know the format version and entry
 point before parsing any node.
 
 ```yaml
-spec_format: "0.2"        # the Specifold Format version this spec conforms to
+spec_format: "0.3"        # the Specifold Format version this spec conforms to
 name: "Acme"              # human name of the system being specified
 root: ingestion           # id of the root component (the node whose parent is null)
 created: 2026-06-18       # ISO date the spec was started
@@ -89,7 +98,7 @@ invariants:               # system-wide properties that are no single node's job
 
 | field         | type            | required | notes                                              |
 |---------------|-----------------|----------|----------------------------------------------------|
-| `spec_format` | string          | yes      | exact format version, e.g. `"0.2"`                 |
+| `spec_format` | string          | yes      | exact format version, e.g. `"0.3"`                 |
 | `name`        | string          | yes      | the system's human name                            |
 | `root`        | component id    | yes      | must match the `id` of the single root component   |
 | `created`     | ISO date        | no       | when the spec was started                          |
@@ -109,8 +118,9 @@ judgment lives in the frontmatter; everything that needs judgment stays in named
 prose.** A field earns a place in the frontmatter only when a deterministic check
 needs it. This is what keeps a node concise and keeps the validator honest.
 
-Every node carries a `kind`. v0.2 defines `component` and `feature`; future layers
-(`ux`, `stack`, `plan`) will add kinds without disturbing these two.
+Every node carries a `kind`. v0.3 defines `component`, `feature`, and
+`evaluation`; future layers (`ux`, `stack`, `plan`) will add kinds without
+disturbing these.
 
 ### A component file
 
@@ -285,6 +295,72 @@ money returns to the original method, stock is restored, and the customer is tol
 Store credit instead of money-back — changes the user's mental model of "refund."
 ```
 
+### An evaluation file
+
+An evaluation records feedback or judgment about something derived from, described by,
+or revised within the spec. It is intentionally small: a verdict, a one-sentence
+summary, and optional evidence/lessons. The human remains the evaluator; the spec is
+where that judgment stops evaporating.
+
+#### Frontmatter
+
+```yaml
+---
+id: refund-v1-evaluation
+title: Refund v1 evaluation
+kind: evaluation
+subject:
+  feature: refund
+  rev: "2026-06-29T12-15-00Z"
+verdict: mixed
+summary: Customers understood refunds but expected partial refunds from day one.
+evidence:
+  - three customer interviews
+  - support-ticket review
+promotes_to_spec:
+  - Partial refunds are a core behavior, not a later payment-provider detail.
+rejects:
+  - Full-refund-only MVP.
+---
+```
+
+| field              | type                                      | required | default | notes                                      |
+|--------------------|-------------------------------------------|----------|---------|--------------------------------------------|
+| `id`               | string                                    | yes      | —       | stable, lowercase, hyphenated              |
+| `title`            | string                                    | yes      | —       | human-readable name                        |
+| `kind`             | `evaluation`                              | yes      | —       | the node kind discriminator                |
+| `subject`          | object                                    | yes      | —       | what was evaluated; see below              |
+| `verdict`          | `accepted` \| `rejected` \| `mixed` \| `observed` | yes | — | the evaluation result                      |
+| `summary`          | string                                    | yes      | —       | **exactly one sentence**                   |
+| `evidence`         | list of strings                           | no       | `[]`    | sources for the judgment                   |
+| `promotes_to_spec` | list of strings                           | no       | `[]`    | lessons that should affect the spec        |
+| `rejects`          | list of strings                           | no       | `[]`    | ideas, variants, or behaviors ruled out    |
+
+`subject` must name at least one thing being evaluated. `feature` and `component`
+references are checked when present; `rev`, `variant`, and `artifact` are labels the
+tool records but does not resolve in v0.3.
+
+```yaml
+subject:
+  feature: refund
+  component: payment
+  rev: "abc123"
+  variant: fastapi-postgres
+  artifact: demo-build-2026-06-29
+```
+
+#### Body
+
+| section       | required    | purpose                                                   |
+|---------------|-------------|-----------------------------------------------------------|
+| `## Notes`    | recommended | what was seen, heard, or judged                           |
+| `## Evidence` | optional    | links, quotes, test runs, interview references            |
+| `## Decision` | optional    | what changed in the spec because of this evaluation       |
+
+Evaluations are not a full back-loop protocol. They are the minimal durable memory
+for feedback while the product remains focused on authoring, evolving, validating,
+and slicing specs.
+
 ## Integrity and lint rules
 
 A spec's structure is checked by deterministic rules over the graph — frontmatter
@@ -295,6 +371,7 @@ and a hosted store enforce the same thing. `error` means the spec is invalid;
 | rule id | sev | checks |
 |---|---|---|
 | `spec/declared-format` | error | `specifold.yaml` exists; `spec_format` is a version the tool understands |
+| `spec/kind-known` | error | every node's `kind` is one the tool understands |
 | `spec/unique-ids` | error | no two nodes share an `id` |
 | `spec/single-root` | error | exactly one component has `parent: null`; the manifest's `root` names it |
 | `spec/parent-exists` | error | every non-root `parent` resolves to a node |
@@ -305,8 +382,11 @@ and a hosted store enforce the same thing. `error` means the spec is invalid;
 | `spec/depends-on-acyclic` | error | the `depends_on` graph is a DAG |
 | `spec/touches-exists` | error | every `touches[].component` resolves to a component |
 | `spec/feature-touches-nonempty` | error | every feature touches at least one component |
+| `spec/evaluation-shape` | error | every evaluation has a non-empty `subject` and a valid `verdict` |
+| `spec/evaluation-subject-exists` | error | every `subject.feature` / `subject.component` reference resolves to the right node kind |
 | `spec/single-sentence-responsibility` | error | `responsibility` is one sentence |
 | `spec/single-sentence-intent` | error | `intent` is one sentence |
+| `spec/single-sentence-summary` | error | evaluation `summary` is one sentence |
 | `spec/distinct-responsibilities` | warn | no two components declare the same `responsibility` |
 | `spec/component-untouched` | warn | a component no feature touches — a missing feature, or over-architecture |
 | `spec/feature-has-acceptance` | warn | a feature has a non-empty `## Acceptance` |
@@ -331,12 +411,13 @@ The format version is declared per spec in `specifold.yaml`, not per file.
   versions while the format finds its shape. Specs declare the version they were
   written against so tools can migrate or reject them.
 - **The format grows downward, additively.** 0.2 added the feature layer as a new
-  node kind, without disturbing the architecture layer. Future versions are expected
-  to add a UI/UX layer, a technology-binding layer, and a data-shape layer the same
-  way. A spec written against an earlier version stays valid.
+  node kind, and 0.3 added evaluations as lightweight feedback records, without
+  disturbing the architecture layer. Future versions are expected to add a UI/UX
+  layer, a technology-binding layer, and a data-shape layer the same way. A spec
+  written against an earlier version stays valid.
 - **A version is a promise about scope, not a claim of completeness.** Calling this
-  0.2 says plainly: this describes architecture and features, and nothing below them,
-  today.
+  0.3 says plainly: this describes architecture, features, and evaluation notes, and
+  nothing below them, today.
 
 ## Reference schema
 
@@ -344,7 +425,7 @@ The normative, executable form of the frontmatter and root manifest is the pair 
 JSON Schema files alongside this document:
 
 - [`node.schema.json`](node.schema.json) — a single node's frontmatter (`oneOf`
-  component / feature)
+  component / feature / evaluation)
 - [`manifest.schema.json`](manifest.schema.json) — the `specifold.yaml` manifest
 
 JSON Schema validates *shape* only — types, required fields, enums, reference format.
@@ -386,6 +467,15 @@ class Touch(BaseModel):
     needs: str                     # the capability (essential, invariant)
 
 
+class EvaluationSubject(BaseModel):
+    """What an evaluation is about. feature/component refs are checked by lint."""
+    feature: str | None = None
+    component: str | None = None
+    rev: str | None = None
+    variant: str | None = None
+    artifact: str | None = None
+
+
 class SpecRoot(BaseModel):
     """The `specifold.yaml` root manifest."""
     spec_format: str
@@ -419,6 +509,19 @@ class Feature(BaseModel):
     status: Status = Status.draft
     touches: list[Touch] = Field(min_length=1)
     open_questions: list[str] = Field(default_factory=list)
+
+
+class Evaluation(BaseModel):
+    """A feedback or judgment node."""
+    id: str
+    title: str
+    kind: Literal["evaluation"] = "evaluation"
+    subject: EvaluationSubject
+    verdict: Literal["accepted", "rejected", "mixed", "observed"]
+    summary: str
+    evidence: list[str] = Field(default_factory=list)
+    promotes_to_spec: list[str] = Field(default_factory=list)
+    rejects: list[str] = Field(default_factory=list)
 ```
 
 Cross-node integrity is enforced over the full set of nodes, not by the per-node

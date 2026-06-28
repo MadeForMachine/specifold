@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://madeformachine.com/specifold/0.2/manifest.schema.json",
-  "title": "Specifold root manifest (v0.2)",
+  "$id": "https://madeformachine.com/specifold/0.3/manifest.schema.json",
+  "title": "Specifold root manifest (v0.3)",
   "description": "The specifold.yaml root manifest. Makes a spec self-identifying: format version and entry point before any node is parsed.",
   "type": "object",
   "additionalProperties": false,
   "required": ["spec_format", "name", "root"],
   "properties": {
-    "spec_format": { "const": "0.2" },
+    "spec_format": { "const": "0.3" },
     "name": { "type": "string", "minLength": 1 },
     "root": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
     "created": { "type": "string", "format": "date" },

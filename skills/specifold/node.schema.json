@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://madeformachine.com/specifold/0.2/node.schema.json",
-  "title": "Specifold node frontmatter (v0.2)",
-  "description": "The YAML frontmatter of a single Specifold node file. A node is a component (architecture layer) or a feature (feature layer). Shape only: cross-spec integrity is enforced by the named lint rules, not by this schema.",
+  "$id": "https://madeformachine.com/specifold/0.3/node.schema.json",
+  "title": "Specifold node frontmatter (v0.3)",
+  "description": "The YAML frontmatter of a single Specifold node file. A node is a component (architecture layer), feature (behavior layer), or evaluation (documented feedback/judgment). Shape only: cross-spec integrity is enforced by the named lint rules, not by this schema.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "title", "kind", "parent"],
+  "required": ["id", "title", "kind"],
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
     "title": { "type": "string", "minLength": 1 },
-    "kind": { "enum": ["component", "feature"] },
+    "kind": { "enum": ["component", "feature", "evaluation"] },
     "parent": { "type": ["string", "null"], "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
     "tier": { "enum": ["core", "experimental"] },
     "status": { "enum": ["draft", "open", "decided"] },
@@ -29,21 +29,45 @@
           "needs": { "type": "string", "minLength": 1 }
         }
       }
-    }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "component": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "feature": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "rev": { "type": "string", "minLength": 1 },
+        "variant": { "type": "string", "minLength": 1 },
+        "artifact": { "type": "string", "minLength": 1 }
+      }
+    },
+    "verdict": { "enum": ["accepted", "rejected", "mixed", "observed"] },
+    "summary": { "type": "string", "minLength": 1 },
+    "evidence": { "type": "array", "items": { "type": "string" } },
+    "promotes_to_spec": { "type": "array", "items": { "type": "string" } },
+    "rejects": { "type": "array", "items": { "type": "string" } }
   },
   "allOf": [
     {
       "if": { "properties": { "kind": { "const": "component" } }, "required": ["kind"] },
       "then": {
-        "required": ["responsibility"],
-        "properties": { "intent": false, "touches": false }
+        "required": ["parent", "responsibility"],
+        "properties": { "intent": false, "touches": false, "subject": false, "verdict": false, "summary": false, "evidence": false, "promotes_to_spec": false, "rejects": false }
       }
     },
     {
       "if": { "properties": { "kind": { "const": "feature" } }, "required": ["kind"] },
       "then": {
-        "required": ["intent", "touches"],
-        "properties": { "responsibility": false, "depends_on": false }
+        "required": ["parent", "intent", "touches"],
+        "properties": { "responsibility": false, "depends_on": false, "subject": false, "verdict": false, "summary": false, "evidence": false, "promotes_to_spec": false, "rejects": false }
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "evaluation" } }, "required": ["kind"] },
+      "then": {
+        "required": ["subject", "verdict", "summary"],
+        "properties": { "parent": false, "responsibility": false, "depends_on": false, "intent": false, "touches": false, "open_questions": false, "status": false }
       }
     }
   ],

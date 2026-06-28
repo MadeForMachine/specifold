@@ -20,17 +20,21 @@ is derived from it and can be rebuilt.**
   or system (e.g. MadeForMachine's own, at `madeformachine/spec/`). An instance, not
   the rules. A product spec is private to whoever owns the product it describes.
 - **Node** — one unit of a spec, stored as one file, with structured *frontmatter*
-  and a prose *body*. Every node is either a *component* or a *feature*.
+  and a prose *body*. Every node is a *component*, *feature*, or *evaluation*.
 - **Component** — a node describing a piece of the architecture: one responsibility,
   its dependencies, and the reasoning behind it.
 - **Feature** — a node describing an observable behaviour: an intent, the components
   it *touches*, and the acceptance any implementation must satisfy.
+- **Evaluation** — a node recording feedback or judgment about a feature,
+  component, revision, variant, or artifact. It preserves what was learned; it does
+  not mutate intent by itself.
 - **Section** — a named part of a node's body (`## Why`, `## Contract`,
   `## Acceptance`, …). A body is a set of sections.
 - **Edge** — a typed link between nodes: a component's `depends_on`, or a feature's
   `touches`.
-- **Canonical store** — the markdown files in a git repository. The single source of
-  truth, and the only authoritative thing in the system.
+- **Canonical store** — the markdown files in a git repository or the service's
+  versioned spec store. The single source of truth, and the only authoritative thing
+  in the system.
 
 ## Retrieval
 

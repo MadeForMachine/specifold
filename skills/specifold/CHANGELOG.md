@@ -5,6 +5,16 @@ skill's behaviour or the Specifold Format it targets; plan to re-read the skill
 after a major bump. The skill version tracks the skill itself; the Specifold
 Format version it targets is noted per release.
 
+## 0.4.0 — 2026-06-29
+**MAJOR.** Targets Specifold Format **v0.3** and moves the skill from
+component-only authoring to MVP graph authoring.
+- Adds `evaluation` nodes as the minimal durable feedback record: subject, verdict,
+  summary, evidence, promoted lessons, and rejected ideas.
+- The skill now classifies raw user input into components, features, evaluations,
+  open questions, and lower-layer details before shaping the spec.
+- Updates the bundled linter and schemas to understand v0.3 while keeping v0.1/v0.2
+  specs readable.
+
 ## 0.3.0 — 2026-06-27
 **MAJOR.** Dual-backend persistence — one skill, two places a spec can live.
 - The interrogation brain is unchanged; only the **persistence tail** forks. The

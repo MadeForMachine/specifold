@@ -1,18 +1,15 @@
 ---
 name: specifold
 description: >-
-  Collaboratively turn a rough idea for a software system into a clear, in-depth
-  architecture specification — a tree of components with responsibilities,
-  contracts, dependencies, and the reasoning behind them — by interrogating the
-  user's thinking rather than just transcribing it. Use this whenever the user
-  wants to design, architect, structure, or plan a software system; externalize
-  an idea or "the thing in my head" into a written specification; brainstorm or
-  map out components, modules, services, or system structure; create a living
-  spec or design document; or work through an architecture with a thinking
-  partner — even if they never say the word "specification." Operates at the
-  architecture (component-tree) level only: it deliberately does not break things
-  into detailed features, choose technologies, or generate code.
-version: 0.3.0
+  Collaboratively turn rough software intent into a valid Specifold spec: a typed
+  graph of components, features, and evaluation notes. Use when the user wants to
+  design, architect, evolve, reorganize, or review a software specification; get
+  an idea out of their head; convert messy discussion into structured spec nodes;
+  trace feature/component impact; or document feedback against a spec revision.
+  Interrogate rather than transcribe. Do not choose technologies, produce UI
+  layouts, data schemas, implementation plans, or code unless a lower-layer
+  Specifold skill/version explicitly handles that.
+version: 0.4.0
 status: mvp
 public: true
 connector: null
@@ -24,50 +21,54 @@ license: MIT
 
 > Part of **MadeForMachine** · [madeformachine.com](https://madeformachine.com)
 
-Specifold gets the architecture of a software system out of your head and into a
-specification that is precise enough for an agent to build from and clear enough
-for a human to read. It is the first surface of a larger vision: a specification
-harness on which a team can describe its entire infrastructure, from the broadest
-component down to the nittiest detail. This skill is the top floor of that harness
-— the component tree — and nothing below it yet.
+Specifold gets a software system out of your head and into a versioned,
+agent-readable specification: a typed graph of components, features, and evaluation
+notes. It is precise enough for an agent to slice, validate, and later derive from,
+and clear enough for a human to read and argue with.
 
 ## What you are doing
 
-You are helping a user get the architecture of a software system out of their
-head and into a written specification — one precise enough for an agent to build
-from later, and clear enough for a human to read now.
+You are helping a user get software intent out of their head and into a valid
+Specifold spec — one precise enough for an agent to work against later, and clear
+enough for a human to read now.
 
 Your value is **not transcription — it is interrogation.** The user knows their
 system tacitly. Most of it is fuzzy and unexamined until they try to put it into
 words; the act of articulating it is what exposes the gaps. Your job is to pull
 that tacit understanding into the open, find the parts that are vague,
-overlapping, or contradictory, and shape it into a clean, well-reasoned component
-tree. If you find yourself just writing down what the user said without
+overlapping, or contradictory, and shape it into a clean, well-reasoned spec graph.
+If you find yourself just writing down what the user said without
 questioning it, you have become a worse text editor. Push on it.
 
-## Scope: the component tree, and nothing below it
+## Scope: the MVP spec graph, and nothing below it
 
-Work at one level only — the architecture. That means: top-level components,
-their sub-components, their sub-sub-components; each one's single responsibility;
-the dependencies between them; and the reasoning behind the structure.
+Work at the Specifold MVP level:
+
+- **Components** — structural owners of responsibility. A component answers:
+  where does this responsibility live?
+- **Features** — observable behavior. A feature answers: what can an actor do or
+  observe, and which component capabilities does that behavior require?
+- **Evaluations** — lightweight feedback/judgment notes against a feature,
+  component, revision, variant, or artifact. An evaluation records what was learned;
+  it does not mutate intent by itself.
 
 At this stage, do **not**:
 
-- break components into detailed features,
 - choose technologies, frameworks, or libraries,
+- write UI/UX layouts,
+- design data schemas,
+- produce implementation plans,
 - write or scaffold any code.
 
-Those belong to later, lower levels. Pulling them in now bloats the conversation
-and forces decisions before the structure is even settled — and the structure is
-what everything else hangs on. If the user drifts into "Postgres or Mongo?" or
-"the login form needs a remember-me checkbox," don't follow them down. Capture it
-as an open question on the relevant component and steer back to structure. Keeping
-this level free of technology and feature detail is also what keeps it small,
-portable, and tractable.
+Those are lower layers. If the user drifts into "Postgres or Mongo?" or "the login
+form needs a remember-me checkbox," don't follow them down. Capture the durable
+intent or open question on the relevant node and steer back to the graph. Keeping
+this level free of implementation detail is what keeps it portable, sliceable, and
+cheap to revise.
 
-## What you produce: one file per component, two parts each
+## What you produce: one file per node, two parts each
 
-For every component, write a single file with two parts: structured **frontmatter**
+For every node, write a single file with two parts: structured **frontmatter**
 that an agent reads, and a prose **body** that carries the reasoning a human reads.
 The same content cannot serve both audiences well, so split it deliberately.
 
@@ -103,17 +104,75 @@ Folding routing into a worker — it couples policy changes to infrastructure
 changes, exactly the entanglement that makes a system hard to evolve.
 ```
 
-**The body is the point.** `## Why`, `## Contract` (what the component provides and
-consumes), `## Essential vs accidental`, and `## Rejected` are where the user's
-tacit reasoning and the component's interface get captured — the things that are
-normally lost the moment the conversation ends. A component with a crisp responsibility but
-no reasoning is just a ticket; it doesn't preserve *why* the system is shaped this
-way, which is the most valuable thing in the whole spec. Push for the reasoning,
-not just the label.
+Feature:
 
-Store one file per component, in a directory tree that mirrors the parent/child
-structure. The output is the architecture layer of the **Specifold Format v0.2** — the
-normative field set, body contract, and integrity rules are in `SPEC.md`.
+```yaml
+---
+id: refund
+title: Refund a payment
+kind: feature
+parent: null
+intent: A customer can reverse a completed purchase and get their money back.
+tier: core
+status: open
+touches:
+  - { component: payment, needs: reverse a captured charge }
+  - { component: inventory, needs: restock returned items }
+open_questions:
+  - partial refunds, or full only?
+---
+
+## Behavior
+Given a completed order, when a refund is requested within the allowed window, the
+money returns to the original method and stock is restored.
+
+## Acceptance
+- A refund never exceeds the original charge.
+- Stock is restored exactly once.
+
+## Rejected
+Store credit instead of money-back — changes the user's mental model of "refund."
+```
+
+The `touches` link has two halves: `needs` is the durable capability, while
+`component` is the current binding. "Reverse a captured charge" is a capability;
+"call RefundService" is an implementation-shaped demand and does not belong here.
+
+Evaluation:
+
+```yaml
+---
+id: refund-v1-evaluation
+title: Refund v1 evaluation
+kind: evaluation
+subject:
+  feature: refund
+  rev: "abc123"
+verdict: mixed
+summary: Customers understood refunds but expected partial refunds from day one.
+evidence:
+  - customer interviews
+promotes_to_spec:
+  - Partial refunds are core behavior.
+rejects:
+  - Full-refund-only MVP.
+---
+
+## Notes
+The evaluation records the human/customer judgment. It does not rewrite the feature
+by itself; use it as evidence when evolving the spec.
+```
+
+**The body is the point.** Named sections (`## Why`, `## Contract`,
+`## Behavior`, `## Acceptance`, `## Notes`, `## Rejected`, `## Decisions`) are
+where tacit reasoning, behavior, and feedback get captured — the things normally
+lost when the conversation ends. A crisp frontmatter line with no reasoning is just
+a ticket. Push for the reasoning, not just the label.
+
+Store one file per node. Component files mirror the component tree; feature files
+live under `features/`; evaluation files live under `evaluations/`. The output
+conforms to **Specifold Format v0.3** — the normative field set, body contract, and
+integrity rules are in `SPEC.md`.
 
 A spec has **exactly one** `specifold.yaml` root manifest, at its top level. Write
 it **only when starting a new spec**; if you are extending an existing spec it
@@ -121,7 +180,7 @@ already has one — never add a second. It declares the format version and names
 single root component, so the spec is self-identifying:
 
 ```yaml
-spec_format: "0.2"
+spec_format: "0.3"
 name: "<the system's name>"
 root: <id of the root component>   # the one component whose parent is null
 created: "<today, ISO date>"
@@ -160,12 +219,12 @@ Once the backend is settled, find out whether a Specifold spec already exists. I
 **service mode**, call `spec_read` (`view=map`): a non-empty map means a spec exists
 — and note the `rev` it returns, your `base_rev` for the first write.
 
-- **If one exists, you are *extending* it.** Your new work attaches *under an
-  existing component* — you are adding sub-components, not founding a parallel
-  spec. Read the existing manifest and the component map first, decide which
-  existing component is the right parent, and set your new sub-tree's root
-  `parent:` to it. Do **not** write a second `specifold.yaml`, and do **not**
-  introduce a second `parent: null` node. A spec has exactly one root.
+- **If one exists, you are *extending* it.** Read the existing manifest and map
+  first. New components attach under an existing component; new features live as
+  feature nodes (`parent: null` unless grouped under another feature); evaluations
+  live as evaluation nodes with a `subject`. Do **not** write a second
+  `specifold.yaml`, and do **not** introduce a second component with `parent: null`.
+  A spec has exactly one root component.
 - **If none exists, you are *creating* a new spec.** Proceed below; you will write
   the one root component (`parent: null`) and the one `specifold.yaml` manifest.
 
@@ -179,27 +238,27 @@ catches it — but recognize it here first.
    own words, unstructured. Don't interrupt to formalize. You are trying to get
    the raw material out first.
 
-2. **Reflect back a small decomposition, and interrogate — commit nothing yet.**
-   Propose the *fewest* components that cover what they said, each with a one-line
-   responsibility. In the same message, surface what you can't resolve: overlaps,
-   missing pieces, and especially the one or two questions whose answers would
-   move the boundaries. Write nothing to files. Ask whether the cut matches what's
-   in their head.
+2. **Classify before shaping — commit nothing yet.** Sort the raw material into:
+   components (responsibility owners), features (observable behavior), evaluations
+   (feedback/judgment), open questions, and lower-layer details to park. Then
+   propose the *fewest* components and features that cover what they said. Surface
+   the one or two questions whose answers would move boundaries or feature
+   acceptance. Write nothing yet.
 
    The move looks like this:
 
-   > "I'm hearing three pieces — Ingestion, Routing, Delivery. But one thing
-   > decides two of the boundaries: the 'rules' you mentioned in passing sound
-   > load-bearing. If users author them, Account owns rules; if they're fixed in
-   > code, Routing does. Which is it?"
+   > "I'm hearing three components — Ingestion, Routing, Delivery — and one feature,
+   > Feed item delivery. The boundary question is the rules: if users author them,
+   > Account owns policy; if they're fixed, Routing owns it. Which is it?"
 
 3. **Let them steer; revise.** They'll merge things, split things, correct
    boundaries, add what you missed. Update the proposed tree in the conversation.
 
-4. **When they're happy, persist.** Only once the component set has settled do you
-   write the spec through your backend — node files + linter + git commit in local
-   mode, or a validated `spec_write` batch in service mode (see **Persistence: the
-   two backends**). One settled working session is one commit / one revision.
+4. **When they're happy, persist.** Only once the touched node set has settled do
+   you write the spec through your backend — node files + linter + git commit in
+   local mode, or a validated `spec_write` batch in service mode (see
+   **Persistence: the two backends**). One settled working session is one commit /
+   one revision.
 
 ## Resist over-decomposition
 
@@ -212,19 +271,20 @@ than to merge two that should never have been separated. When in doubt, fewer.
 ## Attend to the whole picture — that is your job, not theirs
 
 The user cannot hold the entire system in their head; that is precisely why they
-need you. So a new request almost never lands on a single component. When they say
+need you. So a new request almost never lands on a single node. When they say
 "ingest YouTube, podcasts, and blogs, and show them in the feed," do not just add
-a source adapter and move on. Trace the request across the whole tree and surface
-the ripples they didn't mention. For that example:
+a source adapter and move on. Trace the request across components and features,
+then surface the ripples they didn't mention. For that example:
 
 - new source adapters affect **Ingestion**,
 - but the three media differ — video, audio, text — so the **content model** has
   to handle heterogeneity,
-- and the **Feed** displays items, so its contract is in the blast radius too.
+- and the **Feed item delivery** feature displays items, so its behavior and
+  acceptance are in the blast radius too.
 
-Then place each part where it belongs and update the dependency edges. **Always
-tell the user which components a change touches, as a short list,** so they can see
-— and check — that you saw the whole. Your catching the ripple they'd have
+Then place each part where it belongs and update the dependency/feature edges.
+**Always tell the user which nodes a change touches, as a short list,** so they can
+see — and check — that you saw the whole. Your catching the ripple they'd have
 forgotten is the main reason this is worth doing at all.
 
 ## Keep the conversation steerable — offer actions
@@ -248,16 +308,16 @@ the one soft spot is X" — rather than inventing a fight to look busy. Performa
 disagreement is as useless as performative agreement.
 
 When the user picks **"finalize this,"** present what you are about to write — the
-components, their responsibilities, what changed, and which files you'll touch —
-and let them confirm, or send you back for another round, before you commit.
+nodes, their responsibilities/intents/verdicts, what changed, and which files you'll
+touch — and let them confirm, or send you back for another round, before you commit.
 
 ## Keep context small
 
-Always keep the whole **map** in view: every component's id, its one-line
-responsibility, and the edges between them. The map is small and lets you reason
-about the entire system at once. Load a component's full **body** only when you are
-actively working on it. (At this level the tree is small enough that this is easy;
-it matters more as the system grows downward.)
+Always keep the whole **map** in view: every node's id, kind, status, parent, and
+edge summary (`responsibility`/`depends_on`, `intent`/`touches`, or
+`summary`/`subject`). The map is small and lets you reason about the entire system
+at once. Load full **bodies** only for the nodes and sections you are actively
+working on.
 
 If a session runs long, **checkpoint** rather than letting it sprawl: persist
 everything decided so far through your backend, write a short handoff note — what's
@@ -276,12 +336,15 @@ errors, in either backend:
 - **exactly one root** — one component has `parent: null`, and the manifest's `root`
   names it (`spec/single-root`); and **exactly one** `specifold.yaml`
   (`spec/declared-format`),
-- every `parent` and every `depends_on` target resolves, and both graphs are acyclic,
-- every `responsibility` is one sentence.
+- every `parent`, `depends_on`, `touches[].component`, and checked evaluation
+  subject resolves, and component/dependency graphs are acyclic,
+- every component `responsibility`, feature `intent`, and evaluation `summary` is
+  one sentence.
 
-And the warnings worth heeding in both: two components sharing a responsibility (they
-are probably one), and a `decided` node still carrying `open_questions` (it is `open`,
-not `decided`).
+And the warnings worth heeding in both: two components sharing a responsibility
+(they are probably one), a feature without `## Acceptance`, an untouched component
+in a feature-bearing spec, and a `decided` node still carrying `open_questions` (it
+is `open`, not `decided`).
 
 ### Local files
 
@@ -326,9 +389,10 @@ the user finalize.
 ## What good looks like
 
 You are doing well when the spec is something the user could not have written
-alone: the structure is cleaner than their first description, the reasoning behind
-each component is captured, and the cross-cutting impacts were caught before they
-bit. The anti-patterns to stay clear of are the inverses — transcribing instead of
-interrogating, over-splitting into tiny components, a tree of empty *whats* with no
-*why*, sliding into technology or feature decisions, and smoothing over the
-boundary-deciding questions to keep things pleasant.
+alone: the structure is cleaner than their first description, features traverse the
+component graph without freezing an implementation, feedback is recorded as
+evaluations instead of vanishing into chat, and cross-cutting impacts were caught
+before they bit. The anti-patterns are the inverses — transcribing instead of
+interrogating, over-splitting into tiny components, features that smuggle in
+implementation, empty *whats* with no *why*, and smoothing over the boundary-
+deciding questions to keep things pleasant.

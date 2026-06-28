@@ -19,7 +19,7 @@ from pathlib import Path
 
 import yaml
 
-UNDERSTOOD_FORMATS = {"0.1", "0.2"}  # v0.1 specs remain valid under a v0.2 tool
+UNDERSTOOD_FORMATS = {"0.1", "0.2", "0.3"}  # earlier specs remain valid under a v0.3 tool
 
 
 class Node:
@@ -187,9 +187,14 @@ def lint_nodes(nodes, manifest, *, manifest_problems=()) -> Report:
         fmt_failures.append(f"spec_format {manifest.get('spec_format')!r} not understood")
     rep.rule("spec/declared-format", "error", fmt_failures)
 
+    known_kinds = {"component", "feature", "evaluation"}
     components = [n for n in nodes if n.kind == "component"]
     features = [n for n in nodes if n.kind == "feature"]
+    evaluations = [n for n in nodes if n.kind == "evaluation"]
     by_id = {n.id: n for n in nodes}
+
+    # spec/kind-known
+    rep.rule("spec/kind-known", "error", [f"{n.id}: unknown kind {n.kind!r}" for n in nodes if n.kind not in known_kinds])
 
     # spec/unique-ids
     seen, dupes = set(), set()
@@ -281,6 +286,29 @@ def lint_nodes(nodes, manifest, *, manifest_problems=()) -> Report:
     rep.rule("spec/touches-exists", "error", te)
     rep.rule("spec/feature-touches-nonempty", "error", ftn)
 
+    # spec/evaluation-shape
+    es = []
+    verdicts = {"accepted", "rejected", "mixed", "observed"}
+    for e in evaluations:
+        subject = e.fm.get("subject")
+        if not isinstance(subject, dict) or not subject:
+            es.append(f"{e.id}: subject must name what was evaluated")
+        if e.fm.get("verdict") not in verdicts:
+            es.append(f"{e.id}: verdict {e.fm.get('verdict')!r} is not one of {sorted(verdicts)}")
+    rep.rule("spec/evaluation-shape", "error", es)
+
+    # spec/evaluation-subject-exists
+    ese = []
+    for e in evaluations:
+        subject = e.fm.get("subject") or {}
+        feature = subject.get("feature") if isinstance(subject, dict) else None
+        component = subject.get("component") if isinstance(subject, dict) else None
+        if feature is not None and (feature not in by_id or by_id[feature].kind != "feature"):
+            ese.append(f"{e.id}: subject.feature {feature!r} is not a feature")
+        if component is not None and (component not in by_id or by_id[component].kind != "component"):
+            ese.append(f"{e.id}: subject.component {component!r} is not a component")
+    rep.rule("spec/evaluation-subject-exists", "error", ese)
+
     # spec/single-sentence-responsibility / intent
     ssr = [f"{c.id}: responsibility is not one sentence"
            for c in components if not _is_one_sentence(c.fm.get("responsibility", ""))]
@@ -288,6 +316,9 @@ def lint_nodes(nodes, manifest, *, manifest_problems=()) -> Report:
     ssi = [f"{f.id}: intent is not one sentence"
            for f in features if not _is_one_sentence(f.fm.get("intent", ""))]
     rep.rule("spec/single-sentence-intent", "error", ssi)
+    sss = [f"{e.id}: summary is not one sentence"
+           for e in evaluations if not _is_one_sentence(e.fm.get("summary", ""))]
+    rep.rule("spec/single-sentence-summary", "error", sss)
 
     # ---- warnings ----
 
