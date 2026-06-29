@@ -8,7 +8,7 @@ only: it says the graph hangs together, not that the architecture is good.
     python3 specifold_lint.py [spec-dir]      # defaults to the current directory
 
 Exit code is non-zero if any `error`-level rule fails. `warn` never fails the run.
-Rule ids match SPEC.md so the linter and any hosted store enforce the same thing.
+Rule ids match SPEC.md so the linter and any hosted consumer enforce the same thing.
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ def parse_node(text: str, source: str | None = None) -> "Node | None":
     A spec node is any markdown with frontmatter carrying an `id`; anything else
     (plain prose, the format's own docs) returns None. v0.1 nodes have no `kind`, so
     it defaults to `component` (only components existed then). This is the in-memory
-    entry the hosted store uses — it never touches the filesystem."""
+    entry a hosted consumer uses — it never touches the filesystem."""
     fm, body = _split_frontmatter(text)
     if not fm or "id" not in fm:
         return None
@@ -174,8 +174,8 @@ def lint(spec_dir: Path) -> Report:
 def lint_nodes(nodes, manifest, *, manifest_problems=()) -> Report:
     """Lint an in-memory spec: the node list plus the single manifest dict (or None).
 
-    The pure rule engine — no filesystem, no model — shared by the CLI and the hosted
-    store, so a consistency rule is enforced identically wherever a spec is drafted.
+    The pure rule engine — no filesystem, no model — shared by the CLI and hosted
+    consumers, so a consistency rule is enforced identically wherever a spec is drafted.
     `manifest_problems` carries manifest-cardinality failures the in-memory caller can't
     see for itself: the service holds exactly one manifest and passes none, while the
     filesystem loader passes 'no manifest' / 'more than one' here."""

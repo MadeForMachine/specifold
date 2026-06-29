@@ -82,11 +82,10 @@ Folding routing into a worker — it couples policy changes to infrastructure
 changes, the entanglement that makes a system hard to evolve.
 ```
 
-The same skill can persist that spec in either of two places, your choice up front:
-**local files** in your repo (validated by the bundled linter, version-controlled with
-git — no account needed), or your **MadeForMachine service** (the canonical,
-server-stored spec, read and written over MCP and validated server-side). The
-interrogation is identical either way; the same consistency rules are enforced in both.
+Specifold persists that spec as local files in your project and validates it with the
+bundled linter. Git is optional: if your project uses it, the spec versions with the
+project; if not, the format still works. The hosted MCP/database product is **MrSpec**,
+not this skill.
 
 ## Install
 

@@ -11,7 +11,7 @@ is derived from it and can be rebuilt.**
 ## The artifact
 
 - **Spec** — the complete specification of one system: a set of *nodes* and the
-  *edges* between them. Stored as markdown files in git. Unqualified, "spec" means a
+  *edges* between them. Stored as markdown files in a project folder. Unqualified, "spec" means a
   *product spec*.
 - **Format spec** — the definition of the Specifold format itself: `SPEC.md`, the
   JSON Schemas, and the reference parser and lint. The rules every spec obeys. Lives
@@ -32,9 +32,8 @@ is derived from it and can be rebuilt.**
   `## Acceptance`, …). A body is a set of sections.
 - **Edge** — a typed link between nodes: a component's `depends_on`, or a feature's
   `touches`.
-- **Canonical store** — the markdown files in a git repository or the service's
-  versioned spec store. The single source of truth, and the only authoritative thing
-  in the system.
+- **Canonical store** — the markdown files in the project spec directory. The single
+  source of truth for local Specifold, and the only authoritative thing in the system.
 
 ## Retrieval
 
@@ -62,12 +61,6 @@ All of these are *derived from* the canonical store.
 
 The components that do the work.
 
-- **spec-store** — owns the canonical git files.
-- **spec-core** — materializes the store into the read-model and answers pulls; the
-  deterministic heart, needs no model.
-- **model-gateway** — the single swappable door to the chosen LLM.
-- **authoring** — the model-driven loop that turns intent (fresh or imported) into
-  validated spec *writes*.
-- **derivation** — the model-driven step that turns a pull into an artifact.
-- **web-app** — surface for authoring, ingesting, and visualizing specs.
-- **mcp-server** — surface that lets a coding agent pull and derive from inside its IDE.
+- **Reference linter** — the deterministic checker that validates local Specifold files.
+- **MrSpec** — the separate hosted MadeForMachine product that stores Specifold specs in a
+  database and exposes them through MCP. It is not the local Specifold skill.

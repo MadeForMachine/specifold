@@ -9,7 +9,7 @@ description: >-
   Interrogate rather than transcribe. Do not choose technologies, produce UI
   layouts, data schemas, implementation plans, or code unless a lower-layer
   Specifold skill/version explicitly handles that.
-version: 0.4.0
+version: 0.5.0
 status: mvp
 public: true
 connector: null
@@ -186,38 +186,20 @@ root: <id of the root component>   # the one component whose parent is null
 created: "<today, ISO date>"
 ```
 
-## Where the spec lives: pick a backend, explicitly
+## Where the spec lives: local project files
 
-Before you detect or write anything, settle **one** question with the user: where
-does this spec live?
+Specifold stores the spec as files in the user's project. There is no hosted backend in
+this skill, no account, no connector, and no MCP write path. The source of truth is the
+spec directory itself: one `specifold.yaml` manifest plus one Markdown file per node.
 
-- **Local files** — the spec is a directory of node files in the user's repo,
-  validated by the reference linter and version-controlled with git. Nothing leaves
-  the machine; no account needed.
-- **The MFM service** — the spec is the user's canonical, server-stored spec, read
-  and written through the MadeForMachine MCP tools (`spec_read` / `spec_write`) and
-  validated server-side. Use this when the spec is shared, versioned centrally, or
-  consumed by other MFM surfaces.
-
-Ask for the choice up front — *"Should this live as local files in the repo, or in
-your MadeForMachine service?"* — and **never infer it** from whether the MFM
-connector happens to be configured. A present connector is not consent to write to
-the service; an absent one is not licence to silently fall back to files. The choice
-is the user's, made once, and it fixes how you persist for the rest of the session.
-
-Everything else in this skill — the interrogation, the decomposition, the
-ripple-tracing, the format — is identical either way. Only the **persistence tail**
-differs, and the *same* consistency rules are enforced in both: locally by the
-reference linter, on the service by `spec-core`, which runs that same linter. A rule
-cannot pass in one backend and fail in the other. The concrete steps for each are in
-**Persistence: the two backends** at the end.
+Do not require git. If the project is a git repo, the user may version the spec with the
+rest of the project; if it is not, Specifold still works. Your hard guarantee is the
+reference linter, not a VCS.
 
 ## First: new spec, or extending an existing one?
 
-Once the backend is settled, find out whether a Specifold spec already exists. In
-**local mode**, look for a `specifold.yaml` or any node whose `parent` is `null`. In
-**service mode**, call `spec_read` (`view=map`): a non-empty map means a spec exists
-— and note the `rev` it returns, your `base_rev` for the first write.
+Find out whether a Specifold spec already exists. Look for a `specifold.yaml` or any node
+whose `parent` is `null`.
 
 - **If one exists, you are *extending* it.** Read the existing manifest and map
   first. New components attach under an existing component; new features live as
@@ -255,10 +237,8 @@ catches it — but recognize it here first.
    boundaries, add what you missed. Update the proposed tree in the conversation.
 
 4. **When they're happy, persist.** Only once the touched node set has settled do
-   you write the spec through your backend — node files + linter + git commit in
-   local mode, or a validated `spec_write` batch in service mode (see
-   **Persistence: the two backends**). One settled working session is one commit /
-   one revision.
+   you write the local node files and run the reference linter. One settled working
+   session should leave the spec directory valid.
 
 ## Resist over-decomposition
 
@@ -320,18 +300,16 @@ at once. Load full **bodies** only for the nodes and sections you are actively
 working on.
 
 If a session runs long, **checkpoint** rather than letting it sprawl: persist
-everything decided so far through your backend, write a short handoff note — what's
+everything decided so far to local files, write a short handoff note — what's
 decided, what's still open, what's next — and suggest starting a fresh session that
 picks up from the persisted spec and the note. Nothing important should live only in
 the conversation. The persisted spec is the memory; the chat is disposable.
 
-## Persistence: the two backends
+## Persistence
 
 The tree rots silently if links break, so the spec must never be left inconsistent —
-and nothing important may live only in the chat. Both backends enforce the **same**
-consistency rules (the authoritative integrity rules are in `SPEC.md`); the only
-difference is *where* the check runs and *how* a write is recorded. The load-bearing
-errors, in either backend:
+and nothing important may live only in the chat. The authoritative integrity rules are in
+`SPEC.md`; the load-bearing errors are:
 
 - **exactly one root** — one component has `parent: null`, and the manifest's `root`
   names it (`spec/single-root`); and **exactly one** `specifold.yaml`
@@ -341,46 +319,24 @@ errors, in either backend:
 - every component `responsibility`, feature `intent`, and evaluation `summary` is
   one sentence.
 
-And the warnings worth heeding in both: two components sharing a responsibility
+And the warnings worth heeding: two components sharing a responsibility
 (they are probably one), a feature without `## Acceptance`, an untouched component
 in a feature-bearing spec, and a `decided` node still carrying `open_questions` (it
 is `open`, not `decided`).
 
-### Local files
-
-- **Validate before every commit.** Run the reference linter over the spec dir and
-  make it pass with zero errors — never leave a broken tree behind:
+- **Validate before finishing.** Run the reference linter over the spec dir and
+  make it pass with zero errors before calling the change done:
 
       python3 specifold_lint.py <spec-dir>
 
-- **One working session is one commit.** Write the message at the level of
-  decisions, not files: "initial decomposition: 3 components, 4 open questions" or
-  "resolved 2 open questions on routing, added retry dependency."
-- **Branch to explore different directions** — a different architecture, or one
-  someone else wants to try. Keep the one you want; don't try to merge two divergent
-  trees, because reconciling them is a hard problem you don't need here.
+- **Version only if available.** If the project uses git and the user expects commits,
+  commit the session at the level of decisions, not files: "initial decomposition: 3
+  components, 4 open questions" or "resolved 2 open questions on routing." If there is no
+  git repo, do not invent one.
+- **Branch only when the user wants alternatives.** Branches are useful for exploring a
+  different architecture, but they are not part of the Specifold format.
 
-### The MFM service
-
-- **Read with `spec_read`.** Start with `view=map` to hold the whole tree (ids,
-  kinds, parents, edges — no bodies) and to get the current `rev`; pull a component's
-  full body with `view=node`, or a branch with `view=subtree`. Keep the map in view
-  the same way you would locally.
-- **Write whole nodes with `spec_write`, carrying `base_rev`.** A write is a batch of
-  full node texts to `upserts` (each node's id is taken from its own frontmatter), ids
-  to `deletes`, and the `manifest` (only on the first write, or when it changes). Set
-  `base_rev` to the `rev` you last read — this is your "one session is one revision"
-  unit. Author whole nodes, not diffs.
-- **Validation is server-side and identical.** `spec_write` runs the same rules via
-  `spec-core` and commits only if the whole result is consistent. A rejected write
-  comes back with the failing rules — fix the nodes and resend; nothing was written.
-  There is no separate "run the linter" step: the write *is* the check.
-- **Handle the `base_rev` conflict.** If anything was committed since you read,
-  `spec_write` is rejected with the current HEAD and the changed node ids. Re-read
-  those (and the map, for a fresh `rev`), reconcile your intent against what changed,
-  and resend against the new `base_rev`. Never force past a conflict.
-
-Whichever backend: the persisted spec is the memory, the chat is disposable.
+The persisted spec is the memory, the chat is disposable.
 **Nothing is final** — a spec is one possible structure, and the user (or someone
 else) may branch or revise it. Finalizing is provisional, not permanent: never treat
 a decision as locked forever, and never stall waiting to be certain before you let

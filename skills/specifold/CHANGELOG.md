@@ -5,6 +5,13 @@ skill's behaviour or the Specifold Format it targets; plan to re-read the skill
 after a major bump. The skill version tracks the skill itself; the Specifold
 Format version it targets is noted per release.
 
+## 0.5.0 — 2026-06-29
+**MAJOR.** Splits hosted service authoring out of Specifold.
+- Specifold is now local-file-backed only: node files plus `specifold.yaml` in the user's
+  project, validated by the bundled linter.
+- Git is optional, not a source-of-truth assumption.
+- The hosted MCP/database product is now **MrSpec** and lives in its own skill.
+
 ## 0.4.0 — 2026-06-29
 **MAJOR.** Targets Specifold Format **v0.3** and moves the skill from
 component-only authoring to MVP graph authoring.

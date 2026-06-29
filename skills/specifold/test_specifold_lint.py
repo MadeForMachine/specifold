@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for the in-memory linting API (parse_node / parse_manifest / lint_nodes).
 
-This is the surface the hosted Specifold store consumes: it never touches the
+This is the surface a hosted product such as MrSpec consumes: it never touches the
 filesystem, so these build nodes from text and lint them directly. Run with
 `python3 test_specifold_lint.py` (no pytest needed) or under pytest.
 """
