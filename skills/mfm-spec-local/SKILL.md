@@ -16,7 +16,7 @@ license: MIT
 
 # MFM Spec Local
 
-> Part of **MadeForMachine** · [madeformachine.com](https://madeformachine.com)
+> Part of **MFM** · [mfm.dev](https://mfm.dev)
 
 The local MFM Spec skill gets a software system out of your head and into a versioned,
 agent-readable specification: a typed graph of components, features, and evaluation
