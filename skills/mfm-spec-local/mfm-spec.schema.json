@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://madeformachine.com/specifold/0.3/node.schema.json",
-  "title": "Specifold node frontmatter (v0.3)",
-  "description": "The YAML frontmatter of a single Specifold node file. A node is a component (architecture layer), feature (behavior layer), or evaluation (documented feedback/judgment). Shape only: cross-spec integrity is enforced by the named lint rules, not by this schema.",
+  "$id": "https://madeformachine.com/mfm-spec/0.3/mfm-spec.schema.json",
+  "title": "MFM Spec node frontmatter (v0.3)",
+  "description": "The YAML frontmatter of a single MFM Spec node file. A node is a component (architecture layer), feature (behavior layer), or evaluation (documented feedback/judgment). Shape only: cross-spec integrity is enforced by the named lint rules, not by this schema.",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "title", "kind"],

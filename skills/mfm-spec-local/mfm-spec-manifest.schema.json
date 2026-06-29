@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://madeformachine.com/specifold/0.3/manifest.schema.json",
-  "title": "Specifold root manifest (v0.3)",
-  "description": "The specifold.yaml root manifest. Makes a spec self-identifying: format version and entry point before any node is parsed.",
+  "$id": "https://madeformachine.com/mfm-spec/0.3/mfm-spec-manifest.schema.json",
+  "title": "MFM Spec root manifest (v0.3)",
+  "description": "The mfm-spec.yaml root manifest. Makes a spec self-identifying: format version and entry point before any node is parsed.",
   "type": "object",
   "additionalProperties": false,
   "required": ["spec_format", "name", "root"],

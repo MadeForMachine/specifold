@@ -1,8 +1,8 @@
-# Specifold glossary
+# MFM Spec glossary
 
 > Part of **MadeForMachine** · [madeformachine.com](https://madeformachine.com)
 
-The vocabulary of Specifold, defined once. Terms fall into three groups: the
+The vocabulary of MFM Spec, defined once. Terms fall into three groups: the
 **artifact** (what a spec is made of), **retrieval** (how slices of it are read and
 turned into outputs), and the **system** (the components that do the work). One rule
 runs through all of it: **only the canonical store is authoritative; everything else
@@ -13,9 +13,9 @@ is derived from it and can be rebuilt.**
 - **Spec** — the complete specification of one system: a set of *nodes* and the
   *edges* between them. Stored as markdown files in a project folder. Unqualified, "spec" means a
   *product spec*.
-- **Format spec** — the definition of the Specifold format itself: `SPEC.md`, the
+- **Format spec** — the definition of the MFM Spec format itself: `SPEC.md`, the
   JSON Schemas, and the reference parser and lint. The rules every spec obeys. Lives
-  in the public `specifold` repo; this glossary is part of it.
+  in the public `mfm-spec` repo; this glossary is part of it.
 - **Product spec** — a concrete spec *written in* the format, describing one product
   or system (e.g. MadeForMachine's own, at `madeformachine/spec/`). An instance, not
   the rules. A product spec is private to whoever owns the product it describes.
@@ -33,7 +33,7 @@ is derived from it and can be rebuilt.**
 - **Edge** — a typed link between nodes: a component's `depends_on`, or a feature's
   `touches`.
 - **Canonical store** — the markdown files in the project spec directory. The single
-  source of truth for local Specifold, and the only authoritative thing in the system.
+  source of truth for local MFM Spec, and the only authoritative thing in the system.
 
 ## Retrieval
 
@@ -61,6 +61,6 @@ All of these are *derived from* the canonical store.
 
 The components that do the work.
 
-- **Reference linter** — the deterministic checker that validates local Specifold files.
-- **MrSpec** — the separate hosted MadeForMachine product that stores Specifold specs in a
-  database and exposes them through MCP. It is not the local Specifold skill.
+- **Reference linter** — the deterministic checker that validates local MFM Spec files.
+- **MFM Spec hosted skill** — the separate service-backed mode that stores MFM Specs in a
+  database and exposes them through MCP. It is not the local MFM Spec skill.

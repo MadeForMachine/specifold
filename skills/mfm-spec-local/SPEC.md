@@ -1,22 +1,22 @@
-# Specifold Format
+# MFM Spec format
 
 **Version:** 0.3
 **Status:** draft — architecture, features, and evaluation notes
 **Part of:** [MadeForMachine](https://madeformachine.com)
 
-The Specifold Format is an agent-native specification format: a way to describe a
+The MFM Spec format is an agent-native specification format: a way to describe a
 software system as a set of files that an agent can read and build from, and a
 human can read and reason about. It is the durable artifact — the conversation that
 produces it is disposable, and so is any code generated from it. The format is the
 thing that persists.
 
-This document is normative. It is the contract that a Specifold spec conforms to.
+This document is normative. It is the contract that a MFM Spec conforms to.
 The executable counterpart is the [reference schema](#reference-schema) at the end;
 where prose and schema disagree, the schema wins.
 
 ## Scope of v0.3 — architecture, features, and evaluations
 
-A Specifold spec describes a software system as a graph of **nodes**. v0.3 defines
+A MFM Spec describes a software system as a graph of **nodes**. v0.3 defines
 two durable design node kinds and one lightweight feedback node:
 
 - **components** — the architecture layer (unchanged from v0.1): a tree of
@@ -54,11 +54,11 @@ versions they understand.
 
 ## A spec is a directory
 
-A Specifold spec is a directory containing:
+A MFM Spec is a directory containing:
 
 ```
 my-system/
-  specifold.yaml          # root manifest — declares the format version
+  mfm-spec.yaml          # root manifest — declares the format version
   <component>.md          # one file per component
   <component>/            # children of a component mirror the tree as subdirs
     <child-component>.md
@@ -81,14 +81,14 @@ my-system/
   the component tree and not feature epics. Their `subject` field carries what they
   evaluate.
 
-### Root manifest — `specifold.yaml`
+### Root manifest — `mfm-spec.yaml`
 
 Every spec has exactly one root manifest at its top level. It makes the spec
 self-identifying: a tool can read one file and know the format version and entry
 point before parsing any node.
 
 ```yaml
-spec_format: "0.3"        # the Specifold Format version this spec conforms to
+spec_format: "0.3"        # the MFM Spec format version this spec conforms to
 name: "Acme"              # human name of the system being specified
 root: ingestion           # id of the root component (the node whose parent is null)
 created: 2026-06-18       # ISO date the spec was started
@@ -370,7 +370,7 @@ and a hosted store enforce the same thing. `error` means the spec is invalid;
 
 | rule id | sev | checks |
 |---|---|---|
-| `spec/declared-format` | error | `specifold.yaml` exists; `spec_format` is a version the tool understands |
+| `spec/declared-format` | error | `mfm-spec.yaml` exists; `spec_format` is a version the tool understands |
 | `spec/kind-known` | error | every node's `kind` is one the tool understands |
 | `spec/unique-ids` | error | no two nodes share an `id` |
 | `spec/single-root` | error | exactly one component has `parent: null`; the manifest's `root` names it |
@@ -405,7 +405,7 @@ deterministic.
 
 ## Versioning
 
-The format version is declared per spec in `specifold.yaml`, not per file.
+The format version is declared per spec in `mfm-spec.yaml`, not per file.
 
 - **0.x is unstable.** Fields may be added, renamed, or removed between minor
   versions while the format finds its shape. Specs declare the version they were
@@ -424,9 +424,9 @@ The format version is declared per spec in `specifold.yaml`, not per file.
 The normative, executable form of the frontmatter and root manifest is the pair of
 JSON Schema files alongside this document:
 
-- [`node.schema.json`](node.schema.json) — a single node's frontmatter (`oneOf`
+- [`mfm-spec.schema.json`](mfm-spec.schema.json) — a single node's frontmatter (`oneOf`
   component / feature / evaluation)
-- [`manifest.schema.json`](manifest.schema.json) — the `specifold.yaml` manifest
+- [`mfm-spec-manifest.schema.json`](mfm-spec-manifest.schema.json) — the `mfm-spec.yaml` manifest
 
 JSON Schema validates *shape* only — types, required fields, enums, reference format.
 Cross-spec integrity (uniqueness, reference existence, single root, acyclicity, the
@@ -477,7 +477,7 @@ class EvaluationSubject(BaseModel):
 
 
 class SpecRoot(BaseModel):
-    """The `specifold.yaml` root manifest."""
+    """The `mfm-spec.yaml` root manifest."""
     spec_format: str
     name: str
     root: str                      # id of the root component

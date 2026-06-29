@@ -1,15 +1,12 @@
 ---
-name: specifold
+name: mfm-spec-local
 description: >-
-  Collaboratively turn rough software intent into a valid Specifold spec: a typed
-  graph of components, features, and evaluation notes. Use when the user wants to
-  design, architect, evolve, reorganize, or review a software specification; get
-  an idea out of their head; convert messy discussion into structured spec nodes;
-  trace feature/component impact; or document feedback against a spec revision.
-  Interrogate rather than transcribe. Do not choose technologies, produce UI
-  layouts, data schemas, implementation plans, or code unless a lower-layer
-  Specifold skill/version explicitly handles that.
-version: 0.5.0
+  Use when creating or evolving MFM Spec as local project files. Collaboratively
+  turn rough software intent into a typed graph of components, features, and
+  evaluation notes; design, architect, reorganize, review, trace feature/component
+  impact, or document feedback against a spec revision. For hosted service-backed
+  MFM Spec, use the mfm-spec skill instead.
+version: 0.6.0
 status: mvp
 public: true
 connector: null
@@ -17,11 +14,11 @@ requires: []
 license: MIT
 ---
 
-# Specifold
+# MFM Spec Local
 
 > Part of **MadeForMachine** · [madeformachine.com](https://madeformachine.com)
 
-Specifold gets a software system out of your head and into a versioned,
+The local MFM Spec skill gets a software system out of your head and into a versioned,
 agent-readable specification: a typed graph of components, features, and evaluation
 notes. It is precise enough for an agent to slice, validate, and later derive from,
 and clear enough for a human to read and argue with.
@@ -29,7 +26,7 @@ and clear enough for a human to read and argue with.
 ## What you are doing
 
 You are helping a user get software intent out of their head and into a valid
-Specifold spec — one precise enough for an agent to work against later, and clear
+MFM Spec — one precise enough for an agent to work against later, and clear
 enough for a human to read now.
 
 Your value is **not transcription — it is interrogation.** The user knows their
@@ -42,7 +39,7 @@ questioning it, you have become a worse text editor. Push on it.
 
 ## Scope: the MVP spec graph, and nothing below it
 
-Work at the Specifold MVP level:
+Work at the MFM Spec MVP level:
 
 - **Components** — structural owners of responsibility. A component answers:
   where does this responsibility live?
@@ -171,10 +168,10 @@ a ticket. Push for the reasoning, not just the label.
 
 Store one file per node. Component files mirror the component tree; feature files
 live under `features/`; evaluation files live under `evaluations/`. The output
-conforms to **Specifold Format v0.3** — the normative field set, body contract, and
+conforms to **MFM Spec format v0.3** — the normative field set, body contract, and
 integrity rules are in `SPEC.md`.
 
-A spec has **exactly one** `specifold.yaml` root manifest, at its top level. Write
+A spec has **exactly one** `mfm-spec.yaml` root manifest, at its top level. Write
 it **only when starting a new spec**; if you are extending an existing spec it
 already has one — never add a second. It declares the format version and names the
 single root component, so the spec is self-identifying:
@@ -188,27 +185,27 @@ created: "<today, ISO date>"
 
 ## Where the spec lives: local project files
 
-Specifold stores the spec as files in the user's project. There is no hosted backend in
+MFM Spec stores the spec as files in the user's project. There is no hosted backend in
 this skill, no account, no connector, and no MCP write path. The source of truth is the
-spec directory itself: one `specifold.yaml` manifest plus one Markdown file per node.
+spec directory itself: one `mfm-spec.yaml` manifest plus one Markdown file per node.
 
 Do not require git. If the project is a git repo, the user may version the spec with the
-rest of the project; if it is not, Specifold still works. Your hard guarantee is the
+rest of the project; if it is not, MFM Spec still works. Your hard guarantee is the
 reference linter, not a VCS.
 
 ## First: new spec, or extending an existing one?
 
-Find out whether a Specifold spec already exists. Look for a `specifold.yaml` or any node
+Find out whether a MFM Spec already exists. Look for a `mfm-spec.yaml` or any node
 whose `parent` is `null`.
 
 - **If one exists, you are *extending* it.** Read the existing manifest and map
   first. New components attach under an existing component; new features live as
   feature nodes (`parent: null` unless grouped under another feature); evaluations
   live as evaluation nodes with a `subject`. Do **not** write a second
-  `specifold.yaml`, and do **not** introduce a second component with `parent: null`.
+  `mfm-spec.yaml`, and do **not** introduce a second component with `parent: null`.
   A spec has exactly one root component.
 - **If none exists, you are *creating* a new spec.** Proceed below; you will write
-  the one root component (`parent: null`) and the one `specifold.yaml` manifest.
+  the one root component (`parent: null`) and the one `mfm-spec.yaml` manifest.
 
 Getting this wrong is the most damaging mistake at this layer: a second root
 silently forks the tree into two disconnected specs. The consistency check below
@@ -312,7 +309,7 @@ and nothing important may live only in the chat. The authoritative integrity rul
 `SPEC.md`; the load-bearing errors are:
 
 - **exactly one root** — one component has `parent: null`, and the manifest's `root`
-  names it (`spec/single-root`); and **exactly one** `specifold.yaml`
+  names it (`spec/single-root`); and **exactly one** `mfm-spec.yaml`
   (`spec/declared-format`),
 - every `parent`, `depends_on`, `touches[].component`, and checked evaluation
   subject resolves, and component/dependency graphs are acyclic,
@@ -327,14 +324,14 @@ is `open`, not `decided`).
 - **Validate before finishing.** Run the reference linter over the spec dir and
   make it pass with zero errors before calling the change done:
 
-      python3 specifold_lint.py <spec-dir>
+      python3 mfm_spec_lint.py <spec-dir>
 
 - **Version only if available.** If the project uses git and the user expects commits,
   commit the session at the level of decisions, not files: "initial decomposition: 3
   components, 4 open questions" or "resolved 2 open questions on routing." If there is no
   git repo, do not invent one.
 - **Branch only when the user wants alternatives.** Branches are useful for exploring a
-  different architecture, but they are not part of the Specifold format.
+  different architecture, but they are not part of the MFM Spec format.
 
 The persisted spec is the memory, the chat is disposable.
 **Nothing is final** — a spec is one possible structure, and the user (or someone

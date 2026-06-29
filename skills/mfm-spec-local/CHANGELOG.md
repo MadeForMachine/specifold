@@ -1,19 +1,25 @@
-# Changelog — specifold
+# Changelog — mfm-spec-local
 
-All notable changes to the Specifold skill. Entries marked **MAJOR** change the
-skill's behaviour or the Specifold Format it targets; plan to re-read the skill
-after a major bump. The skill version tracks the skill itself; the Specifold
+All notable changes to the MFM Spec local skill. Entries marked **MAJOR** change the
+skill's behaviour or the MFM Spec format it targets; plan to re-read the skill
+after a major bump. The skill version tracks the skill itself; the MFM Spec
 Format version it targets is noted per release.
 
+## 0.6.0 — 2026-06-29
+**MAJOR.** Renames the local skill from `specifold` to `mfm-spec-local`.
+- Keeps **MFM Spec** as the single product/format name.
+- Uses `mfm-spec.yaml`, `mfm-spec.schema.json`, and `mfm_spec_lint.py` for the local file format bundle.
+- Points hosted service-backed work to the separate `mfm-spec` skill.
+
 ## 0.5.0 — 2026-06-29
-**MAJOR.** Splits hosted service authoring out of Specifold.
-- Specifold is now local-file-backed only: node files plus `specifold.yaml` in the user's
+**MAJOR.** Splits hosted service authoring out of MFM Spec.
+- MFM Spec is now local-file-backed only: node files plus `mfm-spec.yaml` in the user's
   project, validated by the bundled linter.
 - Git is optional, not a source-of-truth assumption.
-- The hosted MCP/database product is now **MrSpec** and lives in its own skill.
+- The hosted MCP/database mode is now **MFM Spec** and lives in its own skill.
 
 ## 0.4.0 — 2026-06-29
-**MAJOR.** Targets Specifold Format **v0.3** and moves the skill from
+**MAJOR.** Targets MFM Spec format **v0.3** and moves the skill from
 component-only authoring to MVP graph authoring.
 - Adds `evaluation` nodes as the minimal durable feedback record: subject, verdict,
   summary, evidence, promoted lessons, and rejected ideas.
@@ -34,12 +40,12 @@ component-only authoring to MVP graph authoring.
   between backends. Covers the `base_rev` conflict and server-side validation loop.
 
 ## 0.2.0 — 2026-06-27
-**MAJOR.** Targets Specifold Format **v0.2** (architecture layer + feature layer).
-- Skill now lives in the `mfm-skills` repo at `skills/specifold/` (was its own repo).
-- Primary install is the version-pinned [mfm.dev/skills/specifold](https://mfm.dev/skills/specifold)
+**MAJOR.** Targets MFM Spec format **v0.2** (architecture layer + feature layer).
+- Skill now lives in the `mfm-skills` repo at `skills/mfm-spec-local/` (was its own repo).
+- Primary install is the version-pinned [mfm.dev/skills/mfm-spec-local](https://mfm.dev/skills/mfm-spec-local)
   page; manual clone of `mfm-skills` is the fallback.
 - Carries manifest frontmatter (`version`, `status`, `public`, `connector`, `requires`, `license`).
 
 ## 0.1.0
 - Initial pilot release: architecture-layer interrogation with the bundled reference
-  linter (`specifold_lint.py`) and the open Specifold Format definition (`SPEC.md`).
+  linter (`mfm_spec_lint.py`) and the open MFM Spec format definition (`SPEC.md`).

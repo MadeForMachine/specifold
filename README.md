@@ -31,7 +31,8 @@ twin — so the pages can't drift from the skill.
 
 | Skill | What it does | Status |
 |-------|--------------|--------|
-| [`specifold`](skills/specifold/) | Interrogates a system's architecture out of your head into a spec. | mvp |
+| [`mfm-spec-local`](skills/mfm-spec-local/) | Interrogates a system's architecture out of your head into local MFM Spec files. | mvp |
+| [`mfm-spec`](skills/mfm-spec/) | Steers hosted, service-backed MFM Spec authoring through MCP. | alpha |
 | [`atlas`](skills/atlas/) | Steers your agent to query MadeForMachine Atlas (the product/feature discovery-and-comparison engine) — jump to doc evidence instead of crawling provider docs. | beta |
 
 Internal / operator-scoped skills (e.g. the Atlas harvest tooling) are **not** in
@@ -48,8 +49,9 @@ directory:
 
 ```sh
 git clone https://github.com/MadeForMachine/mfm-skills.git
-cp -r mfm-skills/skills/specifold ~/.claude/skills/specifold     # Claude Code
-cp -r mfm-skills/skills/specifold ~/.agents/skills/specifold     # Codex / Cursor
+cp -r mfm-skills/skills/mfm-spec-local ~/.claude/skills/mfm-spec-local     # Claude Code
+cp -r mfm-skills/skills/mfm-spec-local ~/.agents/skills/mfm-spec-local     # Codex / Cursor
+cp -r mfm-skills/skills/mfm-spec ~/.agents/skills/mfm-spec                 # Hosted MCP skill
 ```
 
 ## License

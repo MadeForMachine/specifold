@@ -1,4 +1,4 @@
-# Specifold
+# MFM Spec Local
 
 > An agent-native specification format — and the skill that interrogates a
 > software system out of your head.
@@ -6,7 +6,7 @@
 > Part of [MadeForMachine](https://madeformachine.com).
 
 Working with a coding agent forces you to put your thinking in writing — and that
-is where you discover how much of it was fuzzy. Specifold turns that moment into
+is where you discover how much of it was fuzzy. MFM Spec turns that moment into
 the point of the exercise. It is an agent skill that takes a rough idea for a
 software system and works with you to produce a clear spec graph: components with
 responsibilities, features with acceptance, and lightweight evaluations that record
@@ -31,14 +31,14 @@ persists, in a format made to be read by both an agent and a human.
   contracts; features record behavior and acceptance; evaluations record judgment
   and evidence.
 - **Attends to the whole picture.** A new requirement rarely lands on one
-  component; Specifold traces it across the tree and tells you exactly which
+  component; MFM Spec traces it across the tree and tells you exactly which
   components it touches, so you can check that it saw the whole.
 - **Stays steerable.** Dial how hard it pushes ("challenge me", "push back
   harder"), navigate ("go deeper", "zoom out"), and finalize when you're ready.
 
 ## Scope: the MVP spec graph, and nothing below it
 
-Specifold works at the MVP spec level: components, features, and evaluation notes.
+MFM Spec works at the MVP spec level: components, features, and evaluation notes.
 It deliberately does **not** choose technologies or frameworks, design UI layouts,
 create data schemas, produce implementation plans, or generate code. Those are lower
 layers. Keeping this level free of them is what keeps a spec small, portable across
@@ -82,26 +82,26 @@ Folding routing into a worker — it couples policy changes to infrastructure
 changes, the entanglement that makes a system hard to evolve.
 ```
 
-Specifold persists that spec as local files in your project and validates it with the
+The local MFM Spec skill persists that spec as files in your project and validates it with the
 bundled linter. Git is optional: if your project uses it, the spec versions with the
-project; if not, the format still works. The hosted MCP/database product is **MrSpec**,
-not this skill.
+project; if not, the format still works. The hosted MCP/database mode is the separate
+`mfm-spec` skill, not this local skill.
 
 ## Install
 
-Specifold is an [Agent Skill](https://docs.claude.com/en/docs/claude-code/skills).
-The primary, version-pinned install is the **[mfm.dev/skills/specifold](https://mfm.dev/skills/specifold)**
+MFM Spec Local is an [Agent Skill](https://docs.claude.com/en/docs/claude-code/skills).
+The primary, version-pinned install is the **[mfm.dev/skills/mfm-spec-local](https://mfm.dev/skills/mfm-spec-local)**
 page — hand it to your agent and it fetches the current version and writes it to the
 right skills directory for your harness.
 
-To install it manually instead, copy the `skills/specifold/` folder from this repo into
-your agent's skills directory (`~/.claude/skills/specifold` for Claude Code, or the shared
-`~/.agents/skills/specifold` for Codex and Cursor):
+To install it manually instead, copy the `skills/mfm-spec-local/` folder from this repo into
+your agent's skills directory (`~/.claude/skills/mfm-spec-local` for Claude Code, or the shared
+`~/.agents/skills/mfm-spec-local` for Codex and Cursor):
 
 ```sh
 git clone https://github.com/MadeForMachine/mfm-skills.git
-cp -r mfm-skills/skills/specifold ~/.claude/skills/specifold     # Claude Code
-cp -r mfm-skills/skills/specifold ~/.agents/skills/specifold     # Codex / Cursor
+cp -r mfm-skills/skills/mfm-spec-local ~/.claude/skills/mfm-spec-local     # Claude Code
+cp -r mfm-skills/skills/mfm-spec-local ~/.agents/skills/mfm-spec-local     # Codex / Cursor
 ```
 
 Then just start describing a system you want to design — "help me architect…",
@@ -109,12 +109,12 @@ Then just start describing a system you want to design — "help me architect…
 
 ## The format
 
-The specs Specifold produces conform to the **Specifold Format** — an open,
+The specs MFM Spec produces conform to the **MFM Spec format** — an open,
 versioned, agent-native specification format. The current version is **v0.3** —
 architecture, features, and evaluation notes. The normative definition — fields,
 body contract, integrity rules, and a Pydantic reference schema — is in
 [`SPEC.md`](./SPEC.md), and it's
-published in the open at [mfm.dev/specifold](https://mfm.dev/specifold).
+published in the open at [mfm.dev/mfm-spec](https://mfm.dev/mfm-spec).
 
 The version number is a promise the format grows downward over time, not a claim
 it's finished. `0.x` is unstable: fields may change between minor versions while
@@ -123,11 +123,11 @@ against.
 
 ## Status
 
-Specifold is an early MVP, in pilot. We're recruiting teams to run it on real,
+MFM Spec Local is an early MVP, in pilot. We're recruiting teams to run it on real,
 complex systems and tell us where it helps and where it breaks — that feedback
 shapes what the harness becomes.
 
-**[Join the pilot list →](https://madeformachine.com/skills/specifold)**
+**[Join the pilot list →](https://madeformachine.com/skills/mfm-spec-local)**
 
 ## License
 

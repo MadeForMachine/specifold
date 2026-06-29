@@ -1,4 +1,4 @@
-spec_format: "0.1"        # the Specifold Format version this spec conforms to
+spec_format: "0.1"        # the MFM Spec format version this spec conforms to
 name: "Relayve"           # human name of the system being specified
 root: relayve             # id of the root component (parent: null)
 created: 2026-06-15       # ISO date the spec was started

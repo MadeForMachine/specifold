@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Specifold reference linter — enforces the integrity rules from SPEC.md.
+"""MFM Spec reference linter — enforces the integrity rules from SPEC.md.
 
 The format already *specifies* these rules (see the rule table in SPEC.md); this
 makes them executable so a spec can be checked rather than eyeballed. Structural
 only: it says the graph hangs together, not that the architecture is good.
 
-    python3 specifold_lint.py [spec-dir]      # defaults to the current directory
+    python3 mfm_spec_lint.py [spec-dir]      # defaults to the current directory
 
 Exit code is non-zero if any `error`-level rule fails. `warn` never fails the run.
 Rule ids match SPEC.md so the linter and any hosted consumer enforce the same thing.
@@ -72,7 +72,7 @@ def parse_node(text: str, source: str | None = None) -> "Node | None":
 
 
 def parse_manifest(text: str) -> dict:
-    """Parse a specifold.yaml manifest into a dict (empty dict if blank/non-mapping)."""
+    """Parse a mfm-spec.yaml manifest into a dict (empty dict if blank/non-mapping)."""
     data = yaml.safe_load(text) or {}
     return data if isinstance(data, dict) else {}
 
@@ -142,7 +142,7 @@ def load_spec(spec_dir: Path):
 
     The only filesystem-aware part of the linter; the rules themselves run over the
     in-memory nodes via `lint_nodes`."""
-    manifests = sorted(spec_dir.rglob("specifold.yaml"))
+    manifests = sorted(spec_dir.rglob("mfm-spec.yaml"))
     nodes: list[Node] = []
     for md in sorted(spec_dir.rglob("*.md")):
         if md.name.upper() in {"README.MD", "SPEC.MD", "SKILL.MD", "GLOSSARY.MD"}:
@@ -160,10 +160,10 @@ def lint(spec_dir: Path) -> Report:
     manifest_problems: list[str] = []
     manifest = None
     if not manifests:
-        manifest_problems.append("no specifold.yaml found in the spec")
+        manifest_problems.append("no mfm-spec.yaml found in the spec")
     elif len(manifests) > 1:
         manifest_problems.append(
-            "more than one specifold.yaml (a spec has exactly one root manifest): "
+            "more than one mfm-spec.yaml (a spec has exactly one root manifest): "
             + ", ".join(rel(m) for m in manifests)
         )
     else:
@@ -365,7 +365,7 @@ def main() -> None:
     if not spec_dir.is_dir():
         print(f"not a directory: {spec_dir}")
         sys.exit(2)
-    print(f"specifold-lint {spec_dir}\n")
+    print(f"mfm-spec-lint {spec_dir}\n")
     lint(spec_dir).render_and_exit()
 
 
