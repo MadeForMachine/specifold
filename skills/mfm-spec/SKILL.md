@@ -6,11 +6,11 @@ description: >-
   service-backed spec authoring, minimal-context reads,
   fine-grained spec mutations, validation, history, and evaluation notes. Do not use
   for local file-backed specs; use the mfm-spec-local skill for that.
-version: 0.2.0
+version: 0.2.1
 status: alpha
-public: false
+public: true
 connector: mfm
-requires: [mfm_spec_read, mfm_spec_validate, mfm_spec_mutate, mfm_spec_write, mfm_spec_history]
+requires: [mfm_spec_read, mfm_spec_validate, mfm_spec_mutate, mfm_spec_write, mfm_spec_history, mfm_spec_import, mfm_spec_export]
 license: MIT
 ---
 

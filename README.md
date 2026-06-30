@@ -49,10 +49,15 @@ directory:
 
 ```sh
 git clone https://github.com/MadeForMachine/mfm-skills.git
+cp -r mfm-skills/skills/mfm-spec ~/.claude/skills/mfm-spec                 # Claude Code hosted MCP skill
+cp -r mfm-skills/skills/mfm-spec ~/.agents/skills/mfm-spec                 # Codex / Cursor hosted MCP skill
 cp -r mfm-skills/skills/mfm-spec-local ~/.claude/skills/mfm-spec-local     # Claude Code
 cp -r mfm-skills/skills/mfm-spec-local ~/.agents/skills/mfm-spec-local     # Codex / Cursor
-cp -r mfm-skills/skills/mfm-spec ~/.agents/skills/mfm-spec                 # Hosted MCP skill
 ```
+
+Hosted skills also need their MCP connector. For MFM Spec Hosted, configure the `mfm`
+server at `https://mcp.mfm.dev/mcp` and complete OAuth before expecting the `mfm_spec_*`
+tools to appear.
 
 ## License
 

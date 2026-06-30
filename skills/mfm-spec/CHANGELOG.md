@@ -1,5 +1,10 @@
 # Changelog — mfm-spec
 
+## 0.2.1 — 2026-06-30
+- Publishes the hosted MFM Spec skill for pilot setup.
+- Adds `mfm_spec_import` and `mfm_spec_export` to the declared tool requirements.
+- Documents that installation needs both the skill and the authenticated `mfm` MCP server.
+
 ## 0.2.0 — 2026-06-29
 - Renames the hosted skill from `mrspec` to `mfm-spec`.
 - Renames required MCP tools from `mrspec_*` to `mfm_spec_*`.
