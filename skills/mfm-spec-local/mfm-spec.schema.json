@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://madeformachine.com/mfm-spec/0.3/mfm-spec.schema.json",
-  "title": "MFM Spec node frontmatter (v0.3)",
+  "$id": "https://madeformachine.com/mfm-spec/0.4/mfm-spec.schema.json",
+  "title": "MFM Spec node frontmatter (v0.4)",
   "description": "The YAML frontmatter of a single MFM Spec node file. A node is a component (architecture layer), feature (behavior layer), or evaluation (documented feedback/judgment). Shape only: cross-spec integrity is enforced by the named lint rules, not by this schema.",
   "type": "object",
   "additionalProperties": false,
@@ -12,7 +12,12 @@
     "kind": { "enum": ["component", "feature", "evaluation"] },
     "parent": { "type": ["string", "null"], "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
     "tier": { "enum": ["core", "experimental"] },
-    "status": { "enum": ["draft", "open", "decided"] },
+    "status": { "enum": ["draft", "open", "decided", "superseded"] },
+    "superseded_by": {
+      "description": "Successor node ids for a superseded node — one for a rename or merge, several for a split, none for an outright retire. Same kind as this node; only meaningful with status: superseded.",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" }
+    },
     "open_questions": { "type": "array", "items": { "type": "string" } },
     "responsibility": { "type": "string", "minLength": 1 },
     "depends_on": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
@@ -67,7 +72,7 @@
       "if": { "properties": { "kind": { "const": "evaluation" } }, "required": ["kind"] },
       "then": {
         "required": ["subject", "verdict", "summary"],
-        "properties": { "parent": false, "responsibility": false, "depends_on": false, "intent": false, "touches": false, "open_questions": false, "status": false }
+        "properties": { "parent": false, "responsibility": false, "depends_on": false, "intent": false, "touches": false, "open_questions": false, "status": false, "superseded_by": false }
       }
     }
   ],

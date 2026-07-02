@@ -118,6 +118,92 @@ def test_multi_sentence_evaluation_summary_is_an_error():
     assert "spec/single-sentence-summary" in errors(rep)
 
 
+def warnings(rep):
+    return {w["rule"] for w in rep.summary()["warnings"]}
+
+
+def test_supersede_link_must_resolve_to_same_kind():
+    # dangling successor
+    bad = lint_nodes(
+        [node("root", None),
+         node("old", "root", extra="status: superseded\nsuperseded_by: [ghost]\n")],
+        MANIFEST,
+    )
+    assert "spec/superseded-by-exists" in errors(bad)
+
+    # successor of the wrong kind (component superseded by a feature)
+    cross = lint_nodes(
+        [node("root", None), feature("feat"),
+         node("old", "root", extra="status: superseded\nsuperseded_by: [feat]\n")],
+        MANIFEST,
+    )
+    assert "spec/superseded-by-exists" in errors(cross)
+
+
+def test_superseded_by_requires_superseded_status():
+    rep = lint_nodes(
+        [node("root", None), node("new", "root"),
+         node("old", "root", extra="superseded_by: [new]\n")],  # still status: draft
+        MANIFEST,
+    )
+    assert "spec/superseded-shape" in errors(rep)
+
+
+def test_clean_supersession_is_valid():
+    # a rename: old superseded by new, identical responsibility, no live edge to old
+    rep = lint_nodes(
+        [node("root", None),
+         node("new", "root", resp="Owns the renamed thing."),
+         feature("feat", component="new"),
+         node("old", "root", resp="Owns the renamed thing.",
+              extra="status: superseded\nsuperseded_by: [new]\n")],
+        MANIFEST,
+    )
+    assert not rep.has_errors(), rep.summary()
+    assert "spec/live-edge-to-superseded" not in warnings(rep)
+    # the tombstone's kept responsibility (== new's) does not trip distinct-responsibilities
+    assert "spec/distinct-responsibilities" not in warnings(rep)
+    # a retire names no successor and is equally valid
+    retired = lint_nodes(
+        [node("root", None), node("gone", "root", extra="status: superseded\n")],
+        MANIFEST,
+    )
+    assert not retired.has_errors(), retired.summary()
+
+
+def test_live_edge_to_superseded_warns():
+    rep = lint_nodes(
+        [node("root", None), node("new", "root"),
+         node("old", "root", extra="status: superseded\nsuperseded_by: [new]\n"),
+         node("clingy", "root", extra="depends_on: [old]\n"),  # missed repoint
+         feature("feat", component="old")],                    # missed repoint
+        MANIFEST,
+    )
+    assert "spec/live-edge-to-superseded" in warnings(rep)
+    # but an evaluation may keep referencing the superseded node — historical record
+    hist = lint_nodes(
+        [node("root", None), node("new", "root"),
+         node("old", "root", extra="status: superseded\nsuperseded_by: [new]\n"),
+         feature("feat", component="new"),
+         evaluation("eval", subject="component: old")],
+        MANIFEST,
+    )
+    assert "spec/live-edge-to-superseded" not in warnings(hist)
+
+
+def test_component_untouched_scoped_to_live_leaves():
+    rep = lint_nodes(
+        [node("root", None),
+         node("group", "root"),            # grouping parent — exempt
+         node("leaf", "group"),            # untouched live leaf — warns
+         node("old", "group", extra="status: superseded\n"),  # superseded — exempt
+         feature("feat", component="root")],
+        MANIFEST,
+    )
+    cu = [w for w in rep.summary()["warnings"] if w["rule"] == "spec/component-untouched"]
+    assert cu and cu[0]["failures"] == ["leaf: no feature touches it"]
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:

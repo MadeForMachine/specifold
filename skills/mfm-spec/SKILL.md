@@ -6,11 +6,11 @@ description: >-
   service-backed spec authoring, minimal-context reads,
   fine-grained spec mutations, validation, history, and evaluation notes. Do not use
   for local file-backed specs; use the mfm-spec-local skill for that.
-version: 0.2.1
+version: 0.3.0
 status: alpha
 public: true
 connector: mfm
-requires: [mfm_spec_read, mfm_spec_validate, mfm_spec_mutate, mfm_spec_write, mfm_spec_history, mfm_spec_import, mfm_spec_export]
+requires: [mfm_spec_read, mfm_spec_validate, mfm_spec_mutate, mfm_spec_rename, mfm_spec_merge, mfm_spec_split, mfm_spec_retire, mfm_spec_write, mfm_spec_history, mfm_spec_import, mfm_spec_export]
 license: MIT
 ---
 
@@ -45,6 +45,8 @@ radius:
 
 - `view=node` for one full node,
 - `view=subtree` for a component branch,
+- `view=referrers` for everything pointing AT one node — children, dependents, touching
+  features, evaluation subjects — the blast radius to query before any identity change,
 - named projections such as `authoring-map`, `feature-work`, or `derivation-context` when
   the task has a stable slice shape.
 
@@ -78,6 +80,27 @@ MVP operations are deliberately small and deterministic:
 
 Use `mfm_spec_write` only for import/bootstrap or as an escape hatch when the user already
 intends to replace whole nodes. It is not the normal authoring primitive.
+
+## Reorganize Through Intents, Not Cascades
+
+A node's id is its identity. When the shape of the spec is wrong — a node is misnamed, two
+nodes are one, one node is two, a responsibility is gone — do NOT hand-compose the change
+from primitive ops, and never end an identity change in `delete_node`: that destroys the
+provenance the graph is for. Use the dedicated intents:
+
+- `mfm_spec_rename` — recreates under the new id, repoints every live referrer, supersedes
+  the old id. Fully deterministic; you supply nothing but the ids.
+- `mfm_spec_merge` — you author the successor (`into`: a create payload, or an existing
+  node id to absorb into); the server wires: referrers repoint, each merged node gets
+  `status: superseded` and `superseded_by` → successor.
+- `mfm_spec_split` — you author the successor payloads and `reassign` each live referrer to
+  the successor it now needs; the server refuses to guess an unassigned referrer.
+- `mfm_spec_retire` — for a responsibility that is gone, not relocated. Refused while live
+  nodes still reference it; the refusal lists them.
+
+The loop is always: `view=referrers` on the affected node → name the blast radius to the
+user → issue the intent with the current `base_rev`. Superseded nodes stay in the graph as
+provenance; evaluations keep pointing at them by design.
 
 If a write is rejected because `base_rev` is stale, re-read the map and the changed nodes,
 reconcile the user's intent against the new head, and resend a fresh mutation batch. Never

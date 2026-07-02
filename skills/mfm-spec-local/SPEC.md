@@ -1,7 +1,7 @@
 # MFM Spec format
 
-**Version:** 0.3
-**Status:** draft — architecture, features, and evaluation notes
+**Version:** 0.4
+**Status:** draft — architecture, features, evaluation notes, and node supersession
 **Part of:** [MadeForMachine](https://madeformachine.com)
 
 The MFM Spec format is an agent-native specification format: a way to describe a
@@ -14,9 +14,9 @@ This document is normative. It is the contract that a MFM Spec conforms to.
 The executable counterpart is the [reference schema](#reference-schema) at the end;
 where prose and schema disagree, the schema wins.
 
-## Scope of v0.3 — architecture, features, and evaluations
+## Scope of v0.4 — architecture, features, evaluations, and supersession
 
-A MFM Spec describes a software system as a graph of **nodes**. v0.3 defines
+A MFM Spec describes a software system as a graph of **nodes**. v0.4 defines
 two durable design node kinds and one lightweight feedback node:
 
 - **components** — the architecture layer (unchanged from v0.1): a tree of
@@ -35,7 +35,12 @@ co-evolve. A feature is a path *across* the component tree — it cannot be a pr
 of any one component — which is precisely why it is its own kind of node, linked to
 components rather than nested under one.
 
-v0.3 deliberately does **not** describe:
+v0.4 adds no new node kind. It adds **supersession** to the node lifecycle: a
+`superseded` status and a `superseded_by` edge, so a reorganization — a rename, a
+merge, a split, a retire — preserves the predecessor's provenance in the graph instead
+of hard-deleting it (see [Node lifecycle and supersession](#node-lifecycle-and-supersession)).
+
+v0.4 deliberately does **not** describe:
 
 - technologies, frameworks, or libraries,
 - UI/UX layouts or flows,
@@ -47,10 +52,10 @@ Keeping the spec narrow is what keeps it small, portable across technology choic
 and cheap to throw a new idea at. The version number is a promise that the format
 grows downward over time — not that it is finished.
 
-**Earlier specs remain valid.** v0.3 is additive: a v0.1 component-only spec and a
-v0.2 component+feature spec remain valid, and the architecture-layer rules are
-unchanged. A spec declares the version it was written against; tools support the
-versions they understand.
+**Earlier specs remain valid.** v0.4 is additive: v0.1 component-only, v0.2
+component+feature, and v0.3 component+feature+evaluation specs remain valid, and the
+existing rules are unchanged. A spec declares the version it was written against;
+tools support the versions they understand.
 
 ## A spec is a directory
 
@@ -88,7 +93,7 @@ self-identifying: a tool can read one file and know the format version and entry
 point before parsing any node.
 
 ```yaml
-spec_format: "0.3"        # the MFM Spec format version this spec conforms to
+spec_format: "0.4"        # the MFM Spec format version this spec conforms to
 name: "Acme"              # human name of the system being specified
 root: ingestion           # id of the root component (the node whose parent is null)
 created: 2026-06-18       # ISO date the spec was started
@@ -98,7 +103,7 @@ invariants:               # system-wide properties that are no single node's job
 
 | field         | type            | required | notes                                              |
 |---------------|-----------------|----------|----------------------------------------------------|
-| `spec_format` | string          | yes      | exact format version, e.g. `"0.3"`                 |
+| `spec_format` | string          | yes      | exact format version, e.g. `"0.4"`                 |
 | `name`        | string          | yes      | the system's human name                            |
 | `root`        | component id    | yes      | must match the `id` of the single root component   |
 | `created`     | ISO date        | no       | when the spec was started                          |
@@ -118,7 +123,7 @@ judgment lives in the frontmatter; everything that needs judgment stays in named
 prose.** A field earns a place in the frontmatter only when a deterministic check
 needs it. This is what keeps a node concise and keeps the validator honest.
 
-Every node carries a `kind`. v0.3 defines `component`, `feature`, and
+Every node carries a `kind`. v0.4 defines `component`, `feature`, and
 `evaluation`; future layers (`ux`, `stack`, `plan`) will add kinds without
 disturbing these.
 
@@ -152,8 +157,9 @@ open_questions:
 | `parent`         | component id \| `null`        | yes      | —       | the parent's `id`; `null` for exactly one component (the root)        |
 | `responsibility` | string                        | yes      | —       | **exactly one sentence** — what this component is responsible for     |
 | `tier`           | `core` \| `experimental`      | no       | `core`  | `experimental` marks a component that may not survive                 |
-| `status`         | `draft` \| `open` \| `decided`| no       | `draft` | `draft` = sketched, `open` = has unresolved questions, `decided` = settled |
+| `status`         | `draft` \| `open` \| `decided` \| `superseded` | no | `draft` | `draft` = sketched, `open` = has unresolved questions, `decided` = settled, `superseded` = retired by a reorganization — see [Node lifecycle and supersession](#node-lifecycle-and-supersession) |
 | `depends_on`     | list of edges                 | no       | `[]`    | the components this one needs; see [Dependency edges](#dependency-edges) |
+| `superseded_by`  | list of component ids         | no       | `[]`    | successor components of a superseded node; see [Node lifecycle and supersession](#node-lifecycle-and-supersession) |
 | `open_questions` | list of strings               | no       | `[]`    | unresolved decisions parked on this component                         |
 
 #### Dependency edges
@@ -205,8 +211,9 @@ open_questions:
 | `parent`         | feature id \| `null`          | yes      | —       | optional epic grouping; a feature's parent is a feature, never a component |
 | `intent`         | string                        | yes      | —       | **exactly one sentence** — what the user/caller can observably do     |
 | `tier`           | `core` \| `experimental`      | no       | `core`  | as for components                                                     |
-| `status`         | `draft` \| `open` \| `decided`| no       | `draft` | as for components                                                     |
+| `status`         | `draft` \| `open` \| `decided` \| `superseded` | no | `draft` | as for components                                                     |
 | `touches`        | list of `{component, needs}`  | yes      | —       | **at least one**; the link — see below                                |
+| `superseded_by`  | list of feature ids           | no       | `[]`    | successor features of a superseded node; see [Node lifecycle and supersession](#node-lifecycle-and-supersession) |
 | `open_questions` | list of strings               | no       | `[]`    | unresolved decisions, including parked mismatches                     |
 
 #### The link: `touches`
@@ -230,6 +237,37 @@ satisfy. Detecting it requires judgment ("does *reverse a charge* fall under
 *capture and settle payments*?"), so it is the agent's job, not a lint rule (see
 [Integrity and lint rules](#integrity-and-lint-rules)). An unresolved mismatch is
 parked as an `open_question`, like any other tension.
+
+### Node lifecycle and supersession
+
+A node's `id` is its identity. When a reorganization changes that identity — a rename,
+a merge of several nodes into one, a split of one node into several, or an outright
+retire — the predecessor is not deleted. It is **superseded**: its `status` becomes
+`superseded` and its `superseded_by` lists the successor node(s), so the fact that the
+old node's responsibility now lives elsewhere is a graph fact a tool can traverse, not
+prose in a commit message.
+
+```yaml
+# resolution-policy.md, after being merged into resolution-lifecycle
+status: superseded
+superseded_by: [resolution-lifecycle]
+```
+
+- **Rename / merge** — the predecessor names exactly one successor.
+- **Split** — the predecessor names each of the nodes it divided into.
+- **Retire** — the predecessor names no successor (`superseded_by` absent or empty):
+  the responsibility is gone, not relocated.
+
+`superseded_by` connects nodes of the **same kind** (component→component,
+feature→feature), and only a `superseded` node may carry it — both checked by lint.
+Evaluations are never superseded; they are historical records, not design nodes.
+
+A superseded node stays in the graph as provenance, but it is retired from the live
+design: no live node's `parent`, `depends_on`, or `touches` should still point at it —
+a reorganization repoints every referrer to the successor, and a leftover edge into
+the graveyard is flagged (`spec/live-edge-to-superseded`). Evaluations are exempt:
+their `subject` legitimately keeps naming the node that existed when the judgment was
+made.
 
 ### Body
 
@@ -338,7 +376,7 @@ rejects:
 
 `subject` must name at least one thing being evaluated. `feature` and `component`
 references are checked when present; `rev`, `variant`, and `artifact` are labels the
-tool records but does not resolve in v0.3.
+tool records but does not resolve in v0.4.
 
 ```yaml
 subject:
@@ -384,16 +422,19 @@ and a hosted store enforce the same thing. `error` means the spec is invalid;
 | `spec/feature-touches-nonempty` | error | every feature touches at least one component |
 | `spec/evaluation-shape` | error | every evaluation has a non-empty `subject` and a valid `verdict` |
 | `spec/evaluation-subject-exists` | error | every `subject.feature` / `subject.component` reference resolves to the right node kind |
+| `spec/superseded-by-exists` | error | every `superseded_by` target resolves to a node of the same kind |
+| `spec/superseded-shape` | error | only a node with `status: superseded` carries `superseded_by` |
 | `spec/single-sentence-responsibility` | error | `responsibility` is one sentence |
 | `spec/single-sentence-intent` | error | `intent` is one sentence |
 | `spec/single-sentence-summary` | error | evaluation `summary` is one sentence |
-| `spec/distinct-responsibilities` | warn | no two components declare the same `responsibility` |
-| `spec/component-untouched` | warn | a component no feature touches — a missing feature, or over-architecture |
+| `spec/distinct-responsibilities` | warn | no two **live** components declare the same `responsibility` (a superseded node keeps its responsibility as provenance) |
+| `spec/component-untouched` | warn | a live **leaf** component no feature touches — a missing feature, or over-architecture; grouping parents and superseded components are exempt |
+| `spec/live-edge-to-superseded` | warn | a live node's `parent`, `depends_on`, or `touches` targets a superseded node — a repoint missed by a reorganization; evaluation subjects are exempt |
 | `spec/feature-has-acceptance` | warn | a feature has a non-empty `## Acceptance` |
 | `spec/core-body-complete` | warn | a `core` node has a non-empty `## Why`/`## Contract` (or `## Behavior` for features) |
 | `spec/decided-has-no-open-questions` | warn | a node marked `decided` carries no `open_questions` |
 
-Reserved for v0.3: `spec/variant-invariance` — fields marked invariant agree across
+Reserved for v0.4: `spec/variant-invariance` — fields marked invariant agree across
 implementation variants.
 
 Validity is structural, not aesthetic. It says the graph hangs together; it does not
@@ -411,13 +452,14 @@ The format version is declared per spec in `mfm-spec.yaml`, not per file.
   versions while the format finds its shape. Specs declare the version they were
   written against so tools can migrate or reject them.
 - **The format grows downward, additively.** 0.2 added the feature layer as a new
-  node kind, and 0.3 added evaluations as lightweight feedback records, without
-  disturbing the architecture layer. Future versions are expected to add a UI/UX
-  layer, a technology-binding layer, and a data-shape layer the same way. A spec
-  written against an earlier version stays valid.
+  node kind, 0.3 added evaluations as lightweight feedback records, and 0.4 added
+  supersession to the node lifecycle, without disturbing the architecture layer.
+  Future versions are expected to add a UI/UX layer, a technology-binding layer, and
+  a data-shape layer the same way. A spec written against an earlier version stays
+  valid.
 - **A version is a promise about scope, not a claim of completeness.** Calling this
-  0.3 says plainly: this describes architecture, features, and evaluation notes, and
-  nothing below them, today.
+  0.4 says plainly: this describes architecture, features, evaluation notes, and how
+  nodes are retired, and nothing below them, today.
 
 ## Reference schema
 
@@ -452,6 +494,7 @@ class Status(str, Enum):
     draft = "draft"
     open = "open"
     decided = "decided"
+    superseded = "superseded"      # retired by a reorganization; see superseded_by
 
 
 class Edge(BaseModel):
@@ -495,6 +538,7 @@ class Component(BaseModel):
     tier: Tier = Tier.core
     status: Status = Status.draft
     depends_on: list[str | Edge] = Field(default_factory=list)
+    superseded_by: list[str] = Field(default_factory=list)  # successors of a superseded node
     open_questions: list[str] = Field(default_factory=list)
 
 
@@ -508,6 +552,7 @@ class Feature(BaseModel):
     tier: Tier = Tier.core
     status: Status = Status.draft
     touches: list[Touch] = Field(min_length=1)
+    superseded_by: list[str] = Field(default_factory=list)  # successors of a superseded node
     open_questions: list[str] = Field(default_factory=list)
 
 

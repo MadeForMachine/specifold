@@ -19,7 +19,7 @@ from pathlib import Path
 
 import yaml
 
-UNDERSTOOD_FORMATS = {"0.1", "0.2", "0.3"}  # earlier specs remain valid under a v0.3 tool
+UNDERSTOOD_FORMATS = {"0.1", "0.2", "0.3", "0.4"}  # earlier specs remain valid under a v0.4 tool
 
 
 class Node:
@@ -309,6 +309,24 @@ def lint_nodes(nodes, manifest, *, manifest_problems=()) -> Report:
             ese.append(f"{e.id}: subject.component {component!r} is not a component")
     rep.rule("spec/evaluation-subject-exists", "error", ese)
 
+    # spec/superseded-by-exists — every successor resolves, and to a node of the same kind
+    sbe = []
+    for n in nodes:
+        for t in n.fm.get("superseded_by", []) or []:
+            if t not in by_id:
+                sbe.append(f"{n.id}: superseded_by {t!r} does not exist")
+            elif by_id[t].kind != n.kind:
+                sbe.append(f"{n.id} ({n.kind}): superseded_by {t} is a {by_id[t].kind}")
+    rep.rule("spec/superseded-by-exists", "error", sbe)
+
+    # spec/superseded-shape — a successor link only makes sense on a superseded node
+    ss = [
+        f"{n.id}: carries superseded_by but status is {n.fm.get('status', 'draft')!r}, not 'superseded'"
+        for n in nodes
+        if (n.fm.get("superseded_by") or []) and n.fm.get("status") != "superseded"
+    ]
+    rep.rule("spec/superseded-shape", "error", ss)
+
     # spec/single-sentence-responsibility / intent
     ssr = [f"{c.id}: responsibility is not one sentence"
            for c in components if not _is_one_sentence(c.fm.get("responsibility", ""))]
@@ -322,18 +340,47 @@ def lint_nodes(nodes, manifest, *, manifest_problems=()) -> Report:
 
     # ---- warnings ----
 
-    # spec/distinct-responsibilities
+    # spec/distinct-responsibilities — live components only: a superseded node keeps its
+    # responsibility as provenance, and after a rename it is identical to its successor's.
     by_resp: dict[str, list[str]] = {}
     for c in components:
+        if c.fm.get("status") == "superseded":
+            continue
         by_resp.setdefault((c.fm.get("responsibility") or "").strip(), []).append(c.id)
     dr = [f"shared responsibility: {', '.join(ids)}" for r, ids in by_resp.items() if r and len(ids) > 1]
     rep.rule("spec/distinct-responsibilities", "warn", dr)
 
-    # spec/component-untouched — only meaningful when the spec has features
+    # spec/component-untouched — only meaningful when the spec has features. Scoped to
+    # live *leaf* components: a grouping parent exists to organize its children, not to
+    # be touched directly, and a superseded component is expected to be untouched — so
+    # warning on either would be unavoidable noise after a reorganization.
     if features:
         touched = {t.get("component") for f in features for t in (f.fm.get("touches") or []) if isinstance(t, dict)}
-        cu = [f"{c.id}: no feature touches it" for c in components if c.id not in touched]
+        grouping = {c.parent for c in components if c.parent is not None}
+        cu = [f"{c.id}: no feature touches it" for c in components
+              if c.id not in touched and c.id not in grouping
+              and c.fm.get("status") != "superseded"]
         rep.rule("spec/component-untouched", "warn", cu)
+
+    # spec/live-edge-to-superseded — a live node still wired to the graveyard, i.e. a
+    # repoint missed by a merge/split/retire. Evaluations are exempt: they are historical
+    # records and legitimately keep referencing superseded nodes.
+    superseded_ids = {n.id for n in nodes if n.fm.get("status") == "superseded"}
+    lets = []
+    for n in nodes:
+        if n.kind == "evaluation" or n.fm.get("status") == "superseded":
+            continue
+        if n.parent in superseded_ids:
+            lets.append(f"{n.id}: parent {n.parent} is superseded")
+        for e in n.fm.get("depends_on", []) or []:
+            t = _edge_target(e)
+            if t in superseded_ids:
+                lets.append(f"{n.id}: depends_on {t} which is superseded")
+        for t in n.fm.get("touches", []) or []:
+            comp = t.get("component") if isinstance(t, dict) else None
+            if comp in superseded_ids:
+                lets.append(f"{n.id}: touches {comp} which is superseded")
+    rep.rule("spec/live-edge-to-superseded", "warn", lets)
 
     # spec/feature-has-acceptance
     fha = [f"{f.id}: empty ## Acceptance" for f in features

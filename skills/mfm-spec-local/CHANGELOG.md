@@ -5,6 +5,22 @@ skill's behaviour or the MFM Spec format it targets; plan to re-read the skill
 after a major bump. The skill version tracks the skill itself; the MFM Spec
 Format version it targets is noted per release.
 
+## 0.7.0 — 2026-07-02
+**MAJOR.** Targets MFM Spec format **v0.4**, which adds node supersession —
+provenance-preserving reorganization instead of hard deletes.
+- New `superseded` status and `superseded_by` edge: a renamed, merged, split, or
+  retired node stays in the graph and points at its successor(s).
+- New lint rules: `spec/superseded-by-exists` and `spec/superseded-shape` (errors),
+  `spec/live-edge-to-superseded` (warn — a repoint the reorganization missed).
+- `spec/component-untouched` now warns only on **live leaf** components, so grouping
+  parents introduced by a reorganization and superseded nodes stop emitting
+  unavoidable warnings.
+- `spec/distinct-responsibilities` likewise counts live components only — a rename's
+  tombstone keeps its responsibility as provenance, identical to its successor's.
+- v0.1–v0.3 specs remain valid; the change is additive.
+- Driven by the hosted reorg dogfood (`mfm-spec-reorg-dogfood`): merge previously
+  ended in `delete_node`, losing the record of what absorbed what.
+
 ## 0.6.0 — 2026-06-29
 **MAJOR.** Renames the local skill from `specifold` to `mfm-spec-local`.
 - Keeps **MFM Spec** as the single product/format name.

@@ -6,7 +6,7 @@ description: >-
   evaluation notes; design, architect, reorganize, review, trace feature/component
   impact, or document feedback against a spec revision. For hosted service-backed
   MFM Spec, use the mfm-spec skill instead.
-version: 0.6.0
+version: 0.7.0
 status: mvp
 public: true
 connector: null
@@ -77,7 +77,7 @@ kind: component             # every node declares its kind
 parent: api-service         # id of the parent component, or null at the root
 responsibility: Decide where each inbound item is delivered.   # exactly one sentence
 tier: core                  # core | experimental
-status: open                # draft | open | decided
+status: open                # draft | open | decided | superseded
 depends_on: [identity, delivery]   # ids of the components this one needs
 open_questions:
   - sync or async dispatch?
@@ -311,15 +311,21 @@ and nothing important may live only in the chat. The authoritative integrity rul
 - **exactly one root** — one component has `parent: null`, and the manifest's `root`
   names it (`spec/single-root`); and **exactly one** `mfm-spec.yaml`
   (`spec/declared-format`),
-- every `parent`, `depends_on`, `touches[].component`, and checked evaluation
-  subject resolves, and component/dependency graphs are acyclic,
+- every `parent`, `depends_on`, `touches[].component`, `superseded_by`, and checked
+  evaluation subject resolves, and component/dependency graphs are acyclic,
 - every component `responsibility`, feature `intent`, and evaluation `summary` is
   one sentence.
 
+When a reorganization renames, merges, splits, or retires a node, do not delete the
+predecessor: mark it `status: superseded`, list its successors in `superseded_by`,
+and repoint every live referrer to the successor — provenance stays in the graph
+(see "Node lifecycle and supersession" in `SPEC.md`).
+
 And the warnings worth heeding: two components sharing a responsibility
-(they are probably one), a feature without `## Acceptance`, an untouched component
-in a feature-bearing spec, and a `decided` node still carrying `open_questions` (it
-is `open`, not `decided`).
+(they are probably one), a feature without `## Acceptance`, an untouched live leaf
+component in a feature-bearing spec, a live edge still pointing at a superseded node
+(a repoint the reorganization missed), and a `decided` node still carrying
+`open_questions` (it is `open`, not `decided`).
 
 - **Validate before finishing.** Run the reference linter over the spec dir and
   make it pass with zero errors before calling the change done:
